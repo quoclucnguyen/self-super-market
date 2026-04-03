@@ -1,0 +1,443 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
+import { Plus, X, Loader2, Trash2 } from 'lucide-react';
+import { ProductForm } from './ProductForm';
+import { DeleteDialog } from './DeleteDialog';
+import { useToast } from './Toast';
+import { SearchBar } from './SearchBar';
+import type { Product } from '@/drizzle/schema';
+import type { ProductInput } from '@/lib/validations/product';
+
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+interface ProductsResponse {
+  products: Product[];
+  pagination: PaginationInfo;
+}
+
+interface AdminPageClientProps {
+  initialProducts: Product[];
+  initialPagination: PaginationInfo;
+  categories: string[];
+}
+
+export function AdminPageClient({
+  initialProducts,
+  initialPagination,
+  categories,
+}: AdminPageClientProps) {
+  // State
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [pagination, setPagination] = useState<PaginationInfo>(initialPagination);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchParams, setSearchParams] = useState({ search: '', category: '' });
+
+  // Form state
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const toast = useToast();
+
+  // Fetch products
+  const fetchProducts = useCallback(async (params: { search?: string; category?: string; page?: number } = {}) => {
+    setIsLoading(true);
+    try {
+      const queryParams = new URLSearchParams();
+      if (params.search) queryParams.set('search', params.search);
+      if (params.category) queryParams.set('category', params.category);
+      if (params.page) queryParams.set('page', params.page.toString());
+      queryParams.set('limit', '50');
+
+      const response = await fetch(`/api/products?${queryParams.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch products');
+
+      const data: ProductsResponse = await response.json();
+      setProducts(data.products);
+      setPagination(data.pagination);
+      setSearchParams({ search: params.search || '', category: params.category || '' });
+    } catch (error) {
+      toast.error('Failed to load products');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  // Start creating new product
+  const startCreate = useCallback(() => {
+    setFormMode('create');
+    setSelectedProduct(null);
+  }, []);
+
+  // Start editing product
+  const startEdit = useCallback((product: Product) => {
+    setFormMode('edit');
+    setSelectedProduct(product);
+  }, []);
+
+  // Clear form (reset to create mode)
+  const clearForm = useCallback(() => {
+    setFormMode('create');
+    setSelectedProduct(null);
+  }, []);
+
+  // Handle form submit
+  const handleSubmit = useCallback(async (data: ProductInput) => {
+    setIsSubmitting(true);
+    try {
+      const url = formMode === 'create'
+        ? '/api/products'
+        : `/api/products/${selectedProduct!.id}`;
+
+      const response = await fetch(url, {
+        method: formMode === 'create' ? 'POST' : 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Operation failed');
+      }
+
+      const result = await response.json();
+
+      // Optimistic update
+      if (formMode === 'create') {
+        setProducts(prev => [result, ...prev]);
+        toast.success('Product created successfully');
+        clearForm();
+      } else {
+        setProducts(prev => prev.map(p => p.id === result.id ? result : p));
+        toast.success('Product updated successfully');
+        setSelectedProduct(result);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Operation failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [formMode, selectedProduct, toast, clearForm]);
+
+  // Open delete dialog
+  const openDeleteDialog = useCallback((product: Product) => {
+    setProductToDelete(product);
+    setDeleteDialogOpen(true);
+  }, []);
+
+  // Handle delete
+  const handleDelete = useCallback(async () => {
+    if (!productToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/products/${productToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete product');
+      }
+
+      // Optimistic update
+      setProducts(prev => prev.filter(p => p.id !== productToDelete.id));
+      toast.success('Product deleted successfully');
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
+
+      // Clear form if deleted product was being edited
+      if (selectedProduct?.id === productToDelete.id) {
+        clearForm();
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete product');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [productToDelete, selectedProduct, toast, clearForm]);
+
+  // Handle search
+  const handleSearch = useCallback((search: string, category?: string) => {
+    fetchProducts({ search, category, page: 1 });
+  }, [fetchProducts]);
+
+  // Handle pagination
+  const handlePageChange = useCallback((page: number) => {
+    fetchProducts({ ...searchParams, page });
+  }, [fetchProducts, searchParams]);
+
+  return (
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="shrink-0 px-4 sm:px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">
+              Products
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {pagination.total} total
+            </p>
+          </div>
+        </div>
+
+        {/* Search Bar - Integrated in header */}
+        <div className="mt-3">
+          <SearchBar categories={categories} onSearch={handleSearch} />
+        </div>
+      </div>
+
+      {/* Split View Layout - Full Height */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 overflow-hidden">
+        {/* Left: Product List (2/5 width) */}
+        <div className="lg:col-span-2 flex flex-col min-w-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-hidden">
+          {/* List Header */}
+          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+              Products
+            </h2>
+            <button
+              type="button"
+              onClick={startCreate}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add New
+            </button>
+          </div>
+
+          {/* Scrollable List */}
+          <div className="flex-1 overflow-y-auto">
+            <ProductListPanel
+              products={products}
+              selectedProduct={selectedProduct}
+              onSelect={startEdit}
+              onDelete={openDeleteDialog}
+              isLoading={isLoading}
+            />
+          </div>
+
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (
+            <div className="shrink-0 flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                  className="px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Form Panel (3/5 width) */}
+        <div className="lg:col-span-3 flex flex-col min-w-0 bg-gray-50 dark:bg-gray-900 overflow-hidden">
+          <div className="flex-1 overflow-y-auto">
+            <div className="max-w-2xl mx-auto">
+              {/* Form Card */}
+              <div className="bg-white dark:bg-gray-800 shadow-sm">
+                {/* Form Header */}
+                <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      {formMode === 'create' ? 'Add New Product' : 'Edit Product'}
+                    </h2>
+                    {isSubmitting && (
+                      <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+                    )}
+                  </div>
+                  {selectedProduct && (
+                    <button
+                      type="button"
+                      onClick={clearForm}
+                      className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-400"
+                      aria-label="Clear form"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Form Content */}
+                <div className="p-6">
+                  <ProductForm
+                    initialData={selectedProduct ? {
+                      name: selectedProduct.name,
+                      barcode: selectedProduct.barcode,
+                      price: parseFloat(selectedProduct.price),
+                      description: selectedProduct.description || undefined,
+                      category: selectedProduct.category || undefined,
+                      stockQuantity: selectedProduct.stockQuantity,
+                      imageUrl: selectedProduct.imageUrl || undefined,
+                      imagePublicId: selectedProduct.imagePublicId || undefined,
+                    } : undefined}
+                    onSubmit={handleSubmit}
+                    submitLabel={formMode === 'create' ? 'Create Product' : 'Update Product'}
+                    isSubmitting={isSubmitting}
+                    imagePriority={false}
+                    hideCancelButton
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Delete Dialog */}
+      <DeleteDialog
+        isOpen={deleteDialogOpen}
+        productName={productToDelete?.name || ''}
+        isDeleting={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setDeleteDialogOpen(false);
+          setProductToDelete(null);
+        }}
+      />
+    </div>
+  );
+}
+
+// Product List Panel Component
+interface ProductListPanelProps {
+  products: Product[];
+  selectedProduct: Product | null;
+  onSelect: (product: Product) => void;
+  onDelete: (product: Product) => void;
+  isLoading: boolean;
+}
+
+function ProductListPanel({
+  products,
+  selectedProduct,
+  onSelect,
+  onDelete,
+  isLoading,
+}: ProductListPanelProps) {
+  const getStockBadgeClass = (quantity: number) => {
+    if (quantity > 10) {
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800';
+    }
+    if (quantity > 0) {
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800';
+    }
+    return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800';
+  };
+
+  if (isLoading && products.length === 0) {
+    return (
+      <div className="flex justify-center py-20">
+        <div className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="text-center py-20 px-4">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 mb-3">
+          <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+        </div>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">No products</h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Add a new product to get started
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      {products.map((product) => (
+        <div
+          key={product.id}
+          className={`group flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${
+            selectedProduct?.id === product.id
+              ? 'bg-blue-50 dark:bg-blue-900/20'
+              : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+          }`}
+          onClick={() => onSelect(product)}
+        >
+          {product.imageUrl ? (
+            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+              <Image
+                src={product.imageUrl}
+                alt={product.name}
+                fill
+                className="object-cover"
+                sizes="48px"
+              />
+            </div>
+          ) : (
+            <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate text-sm">
+              {product.name}
+            </h3>
+            <p className="text-xs font-mono text-gray-500 dark:text-gray-400 truncate">
+              {product.barcode}
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="font-semibold text-gray-900 dark:text-gray-100 text-xs">
+                ${parseFloat(product.price).toFixed(2)}
+              </span>
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getStockBadgeClass(product.stockQuantity)}`}>
+                {product.stockQuantity}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(product);
+            }}
+            className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+            aria-label={`Delete ${product.name}`}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}

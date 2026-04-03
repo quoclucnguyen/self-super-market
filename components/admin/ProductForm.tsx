@@ -11,6 +11,8 @@ interface ProductFormProps {
   submitLabel?: string;
   isSubmitting?: boolean;
   imagePriority?: boolean;
+  hideCancelButton?: boolean;
+  onCancel?: () => void;
 }
 
 export function ProductForm({
@@ -19,6 +21,8 @@ export function ProductForm({
   submitLabel = 'Save Product',
   isSubmitting = false,
   imagePriority,
+  hideCancelButton = false,
+  onCancel,
 }: ProductFormProps) {
   const {
     register,
@@ -183,19 +187,30 @@ export function ProductForm({
 
       {/* Submit Button */}
       <div className="flex justify-end gap-3">
-        <button
-          type="button"
-          onClick={() => window.history.back()}
-          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
-        >
-          Cancel
-        </button>
+        {!hideCancelButton && (
+          <button
+            type="button"
+            onClick={onCancel || (() => window.history.back())}
+            disabled={isSubmitting}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
+        )}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          {isSubmitting ? 'Saving...' : submitLabel}
+          {isSubmitting ? (
+            <>
+              <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Saving...
+            </>
+          ) : submitLabel}
         </button>
       </div>
     </form>

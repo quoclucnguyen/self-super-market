@@ -1,5 +1,4 @@
-import { ProductList } from '@/components/admin/ProductList';
-import { SearchBar } from '@/components/admin/SearchBar';
+import { AdminPageClient } from '@/components/admin/AdminPageClient';
 import { db } from '@/lib/db';
 import { products, type Product } from '@/drizzle/schema';
 import { sql, like, or, and, desc } from 'drizzle-orm';
@@ -72,25 +71,10 @@ export default async function AdminPage({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          Products
-        </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Manage your product inventory ({pagination.total} total)
-        </p>
-      </div>
-
-      {/* Search Bar */}
-      <SearchBar categories={categories} />
-
-      {/* Products List */}
-      <ProductList
-        products={productList}
-        currentPage={pagination.page}
-        totalPages={pagination.totalPages}
-        searchParams={params}
+      <AdminPageClient
+        initialProducts={productList}
+        initialPagination={pagination}
+        categories={categories}
       />
     </div>
   );
