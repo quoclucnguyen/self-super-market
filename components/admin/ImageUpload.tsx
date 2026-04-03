@@ -8,9 +8,10 @@ interface ImageUploadProps {
   onChange: (url: string, publicId: string) => void;
   onRemove: () => void;
   className?: string;
+  priority?: boolean;
 }
 
-export function ImageUpload({ value, onChange, onRemove, className = '' }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, onRemove, className = '', priority }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +61,7 @@ export function ImageUpload({ value, onChange, onRemove, className = '' }: Image
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={priority}
           />
           <button
             type="button"

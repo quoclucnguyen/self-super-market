@@ -17,9 +17,10 @@ async function getProduct(id: string) {
 export default async function DeleteProductPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const product = await getProduct(params.id);
+  const { id } = await params;
+  const product = await getProduct(id);
 
   if (!product) {
     notFound();
@@ -28,8 +29,9 @@ export default async function DeleteProductPage({
   async function deleteProduct() {
     'use server';
 
+    const { id: productId } = await params;
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/products/${params.id}`,
+      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/products/${productId}`,
       {
         method: 'DELETE',
       }
@@ -48,13 +50,14 @@ export default async function DeleteProductPage({
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div className="flex items-start gap-4">
           {product.imageUrl && (
-            <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+            <div className="shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
               <Image
                 src={product.imageUrl}
                 alt={product.name}
                 width={96}
                 height={96}
                 className="w-full h-full object-cover"
+                priority
               />
             </div>
           )}

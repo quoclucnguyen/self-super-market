@@ -18,9 +18,10 @@ async function getProduct(id: string) {
 export default async function EditProductPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const product = await getProduct(params.id);
+  const { id } = await params;
+  const product = await getProduct(id);
 
   if (!product) {
     notFound();
@@ -29,8 +30,9 @@ export default async function EditProductPage({
   async function updateProduct(data: ProductInput) {
     'use server';
 
+    const { id: productId } = await params;
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/products/${params.id}`,
+      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/products/${productId}`,
       {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -71,6 +73,7 @@ export default async function EditProductPage({
           }}
           onSubmit={updateProduct}
           submitLabel="Update Product"
+          imagePriority={true}
         />
       </div>
     </div>

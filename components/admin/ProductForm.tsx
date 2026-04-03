@@ -10,6 +10,7 @@ interface ProductFormProps {
   onSubmit: (data: ProductInput) => Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
+  imagePriority?: boolean;
 }
 
 export function ProductForm({
@@ -17,6 +18,7 @@ export function ProductForm({
   onSubmit,
   submitLabel = 'Save Product',
   isSubmitting = false,
+  imagePriority,
 }: ProductFormProps) {
   const {
     register,
@@ -58,6 +60,7 @@ export function ProductForm({
           value={initialData?.imageUrl}
           onChange={handleImageChange}
           onRemove={handleImageRemove}
+          priority={imagePriority}
         />
       </div>
 
