@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Package, Home, LogOut, FileCode } from 'lucide-react';
 import { useState } from 'react';
 import { ToastContainer, useToast } from '@/components/admin/Toast';
+import { Toaster } from '@/components/ui/sonner';
 
 function AdminContent({
   children,
@@ -27,28 +28,28 @@ function AdminContent({
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Navigation */}
-      <nav className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <nav className="shrink-0 bg-card border-b border-border">
         <div className="px-4 sm:px-6">
           <div className="flex justify-between h-14">
             <div className="flex items-center gap-8">
               <Link href="/admin" className="flex items-center gap-2">
                 <Package className="w-5 h-5 text-blue-600" />
-                <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                <span className="text-lg font-bold text-foreground">
                   Product Admin
                 </span>
               </Link>
               <div className="hidden md:flex items-center gap-4">
                 <Link
                   href="/admin"
-                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-1.5 rounded-md text-sm font-medium"
+                  className="text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
                 >
                   Products
                 </Link>
                 <Link
                   href="/admin/api-docs"
-                  className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-1.5 rounded-md text-sm font-medium"
+                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
                 >
                   <FileCode className="w-4 h-4" />
                   API Docs
@@ -58,7 +59,8 @@ function AdminContent({
             <div className="flex items-center gap-2">
               <Link
                 href="/"
-                className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors touch-action-manipulation"
+                aria-label="Back to site"
               >
                 <Home className="w-4 h-4" />
                 <span className="hidden sm:inline">Site</span>
@@ -66,7 +68,8 @@ function AdminContent({
               <button
                 onClick={handleLogout}
                 disabled={loading}
-                className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 px-2.5 py-1.5 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-destructive px-2.5 py-1.5 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                aria-label="Logout"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">{loading ? '...' : 'Logout'}</span>
@@ -76,13 +79,16 @@ function AdminContent({
         </div>
       </nav>
 
-      {/* Main Content - Full height */}
+      {/* Main Content */}
       <main className="flex-1 overflow-hidden">
         {children}
       </main>
 
       {/* Toast Container */}
       <ToastContainer toasts={toast.toasts} onDismiss={toast.dismiss} />
+
+      {/* Sonner Toaster */}
+      <Toaster />
     </div>
   );
 }

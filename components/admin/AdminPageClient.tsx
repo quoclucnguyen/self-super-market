@@ -182,13 +182,13 @@ export function AdminPageClient({
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="shrink-0 px-4 sm:px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="shrink-0 px-4 sm:px-6 py-4 bg-card border-b border-border">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
               Products
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               {pagination.total} total
             </p>
           </div>
@@ -203,16 +203,16 @@ export function AdminPageClient({
       {/* Split View Layout - Full Height */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 overflow-hidden">
         {/* Left: Product List (2/5 width) */}
-        <div className="lg:col-span-2 flex flex-col min-w-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="lg:col-span-2 flex flex-col min-w-0 bg-card border-r border-border overflow-hidden">
           {/* List Header */}
-          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
+            <h2 className="font-semibold text-foreground text-sm">
               Products
             </h2>
             <button
               type="button"
               onClick={startCreate}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors min-h-[44px]"
             >
               <Plus className="w-3.5 h-3.5" />
               Add New
@@ -232,8 +232,8 @@ export function AdminPageClient({
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="shrink-0 flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-              <span className="text-xs text-gray-600 dark:text-gray-400">
+            <div className="shrink-0 flex items-center justify-between px-4 py-3 border-t border-border bg-muted/50">
+              <span className="text-xs text-muted-foreground">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
               <div className="flex items-center gap-1">
@@ -241,7 +241,7 @@ export function AdminPageClient({
                   type="button"
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page === 1}
-                  className="px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-2.5 py-1 text-xs font-medium text-foreground bg-card border border-border rounded hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-11"
                 >
                   Previous
                 </button>
@@ -249,7 +249,7 @@ export function AdminPageClient({
                   type="button"
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={pagination.page === pagination.totalPages}
-                  className="px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-2.5 py-1 text-xs font-medium text-foreground bg-card border border-border rounded hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-11"
                 >
                   Next
                 </button>
@@ -259,26 +259,26 @@ export function AdminPageClient({
         </div>
 
         {/* Right: Form Panel (3/5 width) */}
-        <div className="lg:col-span-3 flex flex-col min-w-0 bg-gray-50 dark:bg-gray-900 overflow-hidden">
-          <div className="flex-1 overflow-y-auto">
+        <div className="lg:col-span-3 flex flex-col min-w-0 bg-muted overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
             <div className="max-w-2xl mx-auto">
               {/* Form Card */}
-              <div className="bg-white dark:bg-gray-800 shadow-sm">
+              <div className="bg-card rounded-lg border border-border shadow-sm">
                 {/* Form Header */}
-                <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-border bg-card rounded-t-lg">
                   <div className="flex items-center gap-3">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    <h2 className="text-lg font-semibold text-foreground">
                       {formMode === 'create' ? 'Add New Product' : 'Edit Product'}
                     </h2>
                     {isSubmitting && (
-                      <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+                      <Loader2 className="w-4 h-4 text-primary animate-spin" />
                     )}
                   </div>
                   {selectedProduct && (
                     <button
                       type="button"
                       onClick={clearForm}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-400"
+                      className="p-1.5 rounded-lg hover:bg-accent transition-colors text-muted-foreground min-h-9 min-w-9 focus-visible:ring-2 focus-visible:ring-ring"
                       aria-label="Clear form"
                     >
                       <X className="w-5 h-5" />
@@ -356,9 +356,9 @@ function ProductListPanel({
   if (isLoading && products.length === 0) {
     return (
       <div className="flex justify-center py-20">
-        <div className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400">
+        <div className="inline-flex items-center gap-2 text-muted-foreground">
           <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-sm">Loading...</span>
+          <span className="text-sm">Loading…</span>
         </div>
       </div>
     );
@@ -367,13 +367,13 @@ function ProductListPanel({
   if (products.length === 0) {
     return (
       <div className="text-center py-20 px-4">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 mb-3">
-          <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-3">
+          <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
         </div>
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">No products</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <h3 className="text-sm font-semibold text-foreground mb-1">No products</h3>
+        <p className="text-xs text-muted-foreground">
           Add a new product to get started
         </p>
       </div>
@@ -381,19 +381,19 @@ function ProductListPanel({
   }
 
   return (
-    <div className="divide-y divide-gray-200 dark:divide-gray-700">
+    <div className="divide-y divide-border">
       {products.map((product) => (
         <div
           key={product.id}
           className={`group flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${
             selectedProduct?.id === product.id
-              ? 'bg-blue-50 dark:bg-blue-900/20'
-              : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+              ? 'bg-primary/10 dark:bg-primary/20'
+              : 'hover:bg-accent'
           }`}
           onClick={() => onSelect(product)}
         >
           {product.imageUrl ? (
-            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0">
               <Image
                 src={product.imageUrl}
                 alt={product.name}
@@ -403,21 +403,21 @@ function ProductListPanel({
               />
             </div>
           ) : (
-            <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+              <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate text-sm">
+            <h3 className="font-medium text-foreground truncate text-sm">
               {product.name}
             </h3>
-            <p className="text-xs font-mono text-gray-500 dark:text-gray-400 truncate">
+            <p className="text-xs font-mono text-muted-foreground truncate">
               {product.barcode}
             </p>
             <div className="flex items-center gap-2 mt-1">
-              <span className="font-semibold text-gray-900 dark:text-gray-100 text-xs">
+              <span className="font-semibold text-foreground text-xs">
                 ${parseFloat(product.price).toFixed(2)}
               </span>
               <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getStockBadgeClass(product.stockQuantity)}`}>
@@ -431,7 +431,7 @@ function ProductListPanel({
               e.stopPropagation();
               onDelete(product);
             }}
-            className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+            className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 min-h-9 min-w-9 focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={`Delete ${product.name}`}
           >
             <Trash2 className="w-4 h-4" />

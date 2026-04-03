@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, X, Copy, Play, Download, ExternalLink } from 'lucide-react';
+import { Check, X, Copy, Download, ExternalLink, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/admin/Toast';
+import { Button } from '@/components/ui/button';
 
 interface ApiEndpoint {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -25,7 +26,7 @@ const apiEndpoints: ApiEndpoint[] = [
       { name: 'search', type: 'string', required: false, description: 'Search by name, barcode, or description' },
       { name: 'category', type: 'string', required: false, description: 'Filter by category' },
       { name: 'page', type: 'number', required: false, description: 'Page number (default: 1)' },
-      { name: 'limit', type: 'number', required: false, description: 'Items per page (default: 20, max: 100)' },
+      { name: 'limit', type: 'number', required: false, description: 'Items per page (default: 20, max 100)' },
     ],
     response: `{ products: Product[], pagination: { page, limit, total, totalPages } }`,
   },
@@ -140,6 +141,7 @@ function getMethodBadge(method: string) {
 
 export default function ApiDocsPage() {
   const [copiedEndpoint, setCopiedEndpoint] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   const toast = useToast();
 
   const copyToClipboard = async (text: string, endpoint: string) => {
@@ -154,6 +156,7 @@ export default function ApiDocsPage() {
   };
 
   const downloadOpenApiSpec = async () => {
+    setIsDownloading(true);
     try {
       const response = await fetch('/api-docs/openapi.json');
       const spec = await response.json();
@@ -169,6 +172,8 @@ export default function ApiDocsPage() {
       toast.success('Downloaded OpenAPI spec');
     } catch {
       toast.error('Failed to download spec');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -182,28 +187,40 @@ export default function ApiDocsPage() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="shrink-0 px-4 sm:px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="shrink-0 px-4 sm:px-6 py-4 bg-card border-b border-border">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
               API Documentation
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               REST API endpoints for Self Super Market
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-xs text-gray-500 dark:text-gray-400">
+            <div className="text-xs text-muted-foreground">
               {apiEndpoints.length} endpoints
             </div>
-            <button
+            <Button
               type="button"
               onClick={downloadOpenApiSpec}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+              disabled={isDownloading}
+              variant="outline"
+              size="sm"
+              className="min-h-[44px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              <Download className="w-3.5 h-3.5" />
-              OpenAPI Spec
-            </button>
+              {isDownloading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Downloading…
+                </>
+              ) : (
+                <>
+                  <Download className="w-3.5 h-3.5" />
+                  OpenAPI Spec
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>
@@ -214,14 +231,14 @@ export default function ApiDocsPage() {
           {apiEndpoints.map((endpoint, index) => (
             <div
               key={index}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+              className="bg-card rounded-lg border border-border overflow-hidden"
             >
               {/* Endpoint Header */}
-              <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-3 px-4 py-3 bg-muted/50 border-b border-border">
                 <span className={`px-2.5 py-1 rounded text-xs font-bold ${getMethodBadge(endpoint.method)}`}>
                   {endpoint.method}
                 </span>
-                <code className="text-sm font-mono text-gray-900 dark:text-gray-100 flex-1">
+                <code className="text-sm font-mono text-foreground flex-1 truncate">
                   {endpoint.path}
                 </code>
                 {endpoint.auth && (
@@ -229,60 +246,62 @@ export default function ApiDocsPage() {
                     Auth
                   </span>
                 )}
-                <button
+                <Button
                   type="button"
                   onClick={() => copyToClipboard(`${endpoint.method} ${endpoint.path}`, endpoint.path)}
-                  className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-400"
-                  aria-label="Copy endpoint"
+                  variant="ghost"
+                  size="icon"
+                  className="min-h-[44px] min-w-[44px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  aria-label={`Copy ${endpoint.method} ${endpoint.path}`}
                 >
                   {copiedEndpoint === endpoint.path ? (
                     <Check className="w-4 h-4 text-green-500" />
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
-                </button>
+                </Button>
               </div>
 
               {/* Endpoint Details */}
               <div className="p-4 space-y-4">
                 {/* Description */}
-                <p className="text-sm text-gray-700 dark:text-gray-300">
+                <p className="text-sm text-foreground">
                   {endpoint.description}
                 </p>
 
                 {/* Query Parameters */}
                 {endpoint.params && endpoint.params.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-2">
+                    <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
                       Query Parameters
                     </h4>
-                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg overflow-hidden">
+                    <div className="bg-muted/50 rounded-lg overflow-hidden">
                       <table className="w-full text-sm">
-                        <thead className="bg-gray-100 dark:bg-gray-800">
+                        <thead className="bg-muted">
                           <tr>
-                            <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Name</th>
-                            <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Type</th>
-                            <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Required</th>
-                            <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Description</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Name</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Type</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Required</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Description</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody className="divide-y divide-border">
                           {endpoint.params.map((param) => (
                             <tr key={param.name}>
                               <td className="px-3 py-2">
                                 <code className="text-blue-600 dark:text-blue-400">{param.name}</code>
                               </td>
                               <td className="px-3 py-2">
-                                <span className="text-gray-600 dark:text-gray-400">{param.type}</span>
+                                <span className="text-muted-foreground">{param.type}</span>
                               </td>
                               <td className="px-3 py-2">
                                 {param.required ? (
-                                  <Check className="w-4 h-4 text-green-500" />
+                                  <Check className="w-4 h-4 text-green-500" aria-hidden="true" />
                                 ) : (
-                                  <X className="w-4 h-4 text-gray-400" />
+                                  <X className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                                 )}
                               </td>
-                              <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{param.description}</td>
+                              <td className="px-3 py-2 text-muted-foreground">{param.description}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -294,36 +313,36 @@ export default function ApiDocsPage() {
                 {/* Request Body */}
                 {endpoint.body && endpoint.body.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-2">
+                    <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
                       Request Body
                     </h4>
-                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg overflow-hidden">
+                    <div className="bg-muted/50 rounded-lg overflow-hidden">
                       <table className="w-full text-sm">
-                        <thead className="bg-gray-100 dark:bg-gray-800">
+                        <thead className="bg-muted">
                           <tr>
-                            <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Name</th>
-                            <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Type</th>
-                            <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Required</th>
-                            <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Description</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Name</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Type</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Required</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Description</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody className="divide-y divide-border">
                           {endpoint.body.map((param) => (
                             <tr key={param.name}>
                               <td className="px-3 py-2">
                                 <code className="text-blue-600 dark:text-blue-400">{param.name}</code>
                               </td>
                               <td className="px-3 py-2">
-                                <span className="text-gray-600 dark:text-gray-400">{param.type}</span>
+                                <span className="text-muted-foreground">{param.type}</span>
                               </td>
                               <td className="px-3 py-2">
                                 {param.required ? (
-                                  <Check className="w-4 h-4 text-green-500" />
+                                  <Check className="w-4 h-4 text-green-500" aria-hidden="true" />
                                 ) : (
-                                  <X className="w-4 h-4 text-gray-400" />
+                                  <X className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                                 )}
                               </td>
-                              <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{param.description}</td>
+                              <td className="px-3 py-2 text-muted-foreground">{param.description}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -335,11 +354,11 @@ export default function ApiDocsPage() {
                 {/* Response */}
                 {endpoint.response && (
                   <div>
-                    <h4 className="text-xs font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-2">
+                    <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
                       Response
                     </h4>
-                    <div className="bg-gray-900 rounded-lg p-3 overflow-x-auto">
-                      <pre className="text-sm text-gray-100">
+                    <div className="bg-muted-900 rounded-lg p-3 overflow-x-auto">
+                      <pre className="text-sm text-foreground">
                         <code>{endpoint.response}</code>
                       </pre>
                     </div>
@@ -358,7 +377,7 @@ export default function ApiDocsPage() {
             <div>
               <span className="text-xs font-medium text-blue-800 dark:text-blue-300 uppercase tracking-wider">Base URL</span>
               <div className="mt-1 flex items-center gap-2">
-                <code className="text-sm text-blue-800 dark:text-blue-300 flex-1">
+                <code className="text-sm text-blue-800 dark:text-blue-300 flex-1 break-all tabular-nums">
                   {typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}
                 </code>
               </div>
@@ -368,13 +387,15 @@ export default function ApiDocsPage() {
             <div>
               <span className="text-xs font-medium text-blue-800 dark:text-blue-300 uppercase tracking-wider">OpenAPI Endpoint</span>
               <div className="mt-1 flex items-center gap-2">
-                <code className="text-sm text-blue-800 dark:text-blue-300 flex-1 break-all">
+                <code className="text-sm text-blue-800 dark:text-blue-300 flex-1 break-all tabular-nums">
                   {getOpenApiUrl()}
                 </code>
-                <button
+                <Button
                   type="button"
                   onClick={() => copyToClipboard(getOpenApiUrl(), 'openapi')}
-                  className="p-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-blue-600 dark:text-blue-400"
+                  variant="ghost"
+                  size="icon"
+                  className="min-h-[44px] min-w-[44px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   aria-label="Copy OpenAPI URL"
                 >
                   {copiedEndpoint === 'openapi' ? (
@@ -382,13 +403,13 @@ export default function ApiDocsPage() {
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
-                </button>
+                </Button>
                 <a
                   href={getOpenApiUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-blue-600 dark:text-blue-400"
-                  aria-label="Open in new tab"
+                  className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-2 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  aria-label="Open OpenAPI spec in new tab"
                 >
                   <ExternalLink className="w-4 h-4" />
                 </a>
@@ -401,7 +422,15 @@ export default function ApiDocsPage() {
                 <span className="font-semibold">Postman:</span> Import → Link → Paste URL
               </p>
               <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">
-                <span className="font-semibold">Swagger UI:</span> Use online tools like <a href="https://editor.swagger.io/" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">editor.swagger.io</a>
+                <span className="font-semibold">Swagger UI:</span> Use online tools like{' '}
+                <a
+                  href="https://editor.swagger.io/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:no-underline"
+                >
+                  editor.swagger.io
+                </a>
               </p>
             </div>
           </div>

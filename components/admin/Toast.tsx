@@ -30,17 +30,17 @@ function ToastItem({ toast, onDismiss }: ToastProps) {
   }, [toast.id, toast.duration, onDismiss]);
 
   const icons = {
-    success: <CheckCircle className="w-5 h-5 text-green-500" />,
-    error: <AlertCircle className="w-5 h-5 text-red-500" />,
-    info: <Info className="w-5 h-5 text-blue-500" />,
-    warning: <AlertTriangle className="w-5 h-5 text-yellow-500" />,
+    success: <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />,
+    error: <AlertCircle className="w-5 h-5 text-destructive" />,
+    info: <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />,
+    warning: <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />,
   };
 
   const backgrounds = {
-    success: 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800',
-    error: 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800',
-    info: 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800',
-    warning: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800',
+    success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
+    error: 'bg-destructive/10 dark:bg-destructive/20 border-destructive/20 dark:border-destructive/30',
+    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
+    warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
   };
 
   return (
@@ -55,7 +55,7 @@ function ToastItem({ toast, onDismiss }: ToastProps) {
       aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
     >
       {icons[toast.type]}
-      <p className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+      <p className="flex-1 text-sm font-medium text-foreground">
         {toast.message}
       </p>
       <button
@@ -63,10 +63,10 @@ function ToastItem({ toast, onDismiss }: ToastProps) {
           setIsLeaving(true);
           setTimeout(() => onDismiss(toast.id), 200);
         }}
-        className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+        className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors min-h-9 min-w-9 focus-visible:ring-2 focus-visible:ring-ring"
         aria-label="Dismiss notification"
       >
-        <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+        <X className="w-4 h-4 text-muted-foreground" />
       </button>
     </div>
   );

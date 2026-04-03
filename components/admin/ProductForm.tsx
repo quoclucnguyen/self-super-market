@@ -4,6 +4,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { productSchema, type ProductInput } from '@/lib/validations/product';
 import { ImageUpload } from './ImageUpload';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Loader2 } from 'lucide-react';
 
 interface ProductFormProps {
   initialData?: Partial<ProductInput>;
@@ -57,101 +62,94 @@ export function ProductForm({
     <form onSubmit={handleSubmit((data) => onSubmit(data))} className="space-y-6">
       {/* Image Upload */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Product Image
-        </label>
-        <ImageUpload
-          value={initialData?.imageUrl}
-          onChange={handleImageChange}
-          onRemove={handleImageRemove}
-          priority={imagePriority}
-        />
+        <Label>Product Image</Label>
+        <div className="mt-2">
+          <ImageUpload
+            value={initialData?.imageUrl}
+            onChange={handleImageChange}
+            onRemove={handleImageRemove}
+            priority={imagePriority}
+          />
+        </div>
       </div>
 
       {/* Name */}
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Product Name <span className="text-red-500">*</span>
-        </label>
-        <input
+        <Label htmlFor="name">
+          Product Name <span className="text-destructive">*</span>
+        </Label>
+        <Input
           {...register('name')}
-          type="text"
           id="name"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600"
           placeholder="Enter product name"
+          className="mt-2"
         />
         {errors.name && (
-          <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+          <p className="text-destructive text-sm mt-1">{errors.name.message}</p>
         )}
       </div>
 
       {/* Barcode */}
       <div>
-        <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Barcode <span className="text-red-500">*</span>
-        </label>
-        <input
+        <Label htmlFor="barcode">
+          Barcode <span className="text-destructive">*</span>
+        </Label>
+        <Input
           {...register('barcode')}
-          type="text"
           id="barcode"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600"
           placeholder="Enter barcode (e.g., 1234567890123)"
+          className="mt-2"
         />
         {errors.barcode && (
-          <p className="text-red-500 text-sm mt-1">{errors.barcode.message}</p>
+          <p className="text-destructive text-sm mt-1">{errors.barcode.message}</p>
         )}
       </div>
 
       {/* Price and Stock Quantity */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Price ($) <span className="text-red-500">*</span>
-          </label>
-          <input
+          <Label htmlFor="price">
+            Price ($) <span className="text-destructive">*</span>
+          </Label>
+          <Input
             {...register('price', { valueAsNumber: true })}
-            type="number"
             id="price"
+            type="number"
             step="0.01"
             min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600"
             placeholder="0.00"
+            className="mt-2"
           />
           {errors.price && (
-            <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>
+            <p className="text-destructive text-sm mt-1">{errors.price.message}</p>
           )}
         </div>
 
         <div>
-          <label htmlFor="stockQuantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Stock Quantity
-          </label>
-          <input
+          <Label htmlFor="stockQuantity">Stock Quantity</Label>
+          <Input
             {...register('stockQuantity', { valueAsNumber: true })}
-            type="number"
             id="stockQuantity"
+            type="number"
             min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600"
             placeholder="0"
+            className="mt-2"
           />
           {errors.stockQuantity && (
-            <p className="text-red-500 text-sm mt-1">{errors.stockQuantity.message}</p>
+            <p className="text-destructive text-sm mt-1">{errors.stockQuantity.message}</p>
           )}
         </div>
       </div>
 
       {/* Category */}
       <div>
-        <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Category
-        </label>
-        <input
+        <Label htmlFor="category">Category</Label>
+        <Input
           {...register('category')}
-          type="text"
           id="category"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600"
           placeholder="e.g., Beverages, Snacks, Dairy"
           list="categories"
+          className="mt-2"
         />
         <datalist id="categories">
           <option value="Beverages" />
@@ -164,54 +162,48 @@ export function ProductForm({
           <option value="Household" />
         </datalist>
         {errors.category && (
-          <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
+          <p className="text-destructive text-sm mt-1">{errors.category.message}</p>
         )}
       </div>
 
       {/* Description */}
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Description
-        </label>
-        <textarea
+        <Label htmlFor="description">Description</Label>
+        <Textarea
           {...register('description')}
           id="description"
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600"
           placeholder="Enter product description"
+          className="mt-2"
         />
         {errors.description && (
-          <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
+          <p className="text-destructive text-sm mt-1">{errors.description.message}</p>
         )}
       </div>
 
       {/* Submit Button */}
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 pt-4">
         {!hideCancelButton && (
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onCancel || (() => window.history.back())}
             disabled={isSubmitting}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           type="submit"
           disabled={isSubmitting}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {isSubmitting ? (
             <>
-              <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Saving...
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Saving…
             </>
           ) : submitLabel}
-        </button>
+        </Button>
       </div>
     </form>
   );
