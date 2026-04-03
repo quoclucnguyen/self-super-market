@@ -207,7 +207,7 @@ export default function ApiDocsPage() {
               disabled={isDownloading}
               variant="outline"
               size="sm"
-              className="min-h-[44px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="min-h-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               {isDownloading ? (
                 <>
@@ -251,7 +251,7 @@ export default function ApiDocsPage() {
                   onClick={() => copyToClipboard(`${endpoint.method} ${endpoint.path}`, endpoint.path)}
                   variant="ghost"
                   size="icon"
-                  className="min-h-[44px] min-w-[44px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="min-h-11 min-w-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   aria-label={`Copy ${endpoint.method} ${endpoint.path}`}
                 >
                   {copiedEndpoint === endpoint.path ? (
@@ -395,7 +395,7 @@ export default function ApiDocsPage() {
                   onClick={() => copyToClipboard(getOpenApiUrl(), 'openapi')}
                   variant="ghost"
                   size="icon"
-                  className="min-h-[44px] min-w-[44px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="min-h-11 min-w-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   aria-label="Copy OpenAPI URL"
                 >
                   {copiedEndpoint === 'openapi' ? (
@@ -408,7 +408,7 @@ export default function ApiDocsPage() {
                   href={getOpenApiUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-2 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="inline-flex items-center justify-center min-h-11 min-w-11 px-2 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   aria-label="Open OpenAPI spec in new tab"
                 >
                   <ExternalLink className="w-4 h-4" />
