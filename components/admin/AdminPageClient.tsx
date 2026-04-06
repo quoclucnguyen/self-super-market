@@ -212,7 +212,7 @@ export function AdminPageClient({
   }, [fetchProducts, searchParams]);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full min-h-0 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="shrink-0 px-4 sm:px-6 py-4 bg-card border-b border-border">
         <div className="flex items-center justify-between gap-4">
@@ -233,7 +233,7 @@ export function AdminPageClient({
       </div>
 
       {/* Split View Layout - Full Height */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 overflow-hidden">
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-5 overflow-hidden">
         {/* Left: Product List (2/5 width) */}
         <div className="lg:col-span-2 flex flex-col min-w-0 min-h-0 bg-card border-r border-border overflow-hidden">
           {/* List Header */}
@@ -292,7 +292,7 @@ export function AdminPageClient({
 
         {/* Right: Form Panel (3/5 width) */}
         <div className="lg:col-span-3 flex flex-col min-w-0 min-h-0 bg-muted overflow-hidden">
-          <div className="flex-1 overflow-y-scroll px-4 sm:px-6 py-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-6">
             <div className="max-w-2xl mx-auto">
               {/* Form Card */}
               <div className="bg-card rounded-lg border border-border shadow-sm">
@@ -321,6 +321,7 @@ export function AdminPageClient({
                 {/* Form Content */}
                 <div className="p-6">
                   <ProductForm
+                    key={selectedProduct?.id || 'new'}
                     initialData={selectedProduct ? {
                       name: selectedProduct.name,
                       barcode: selectedProduct.barcode,

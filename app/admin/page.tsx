@@ -118,7 +118,7 @@ export default async function AdminPage({
   const { products: productList, pagination, categories } = await getProducts(params);
 
   return (
-    <div className="space-y-6">
+    <div className="h-full min-h-0">
       <AdminPageClient
         initialProducts={productList}
         initialPagination={pagination}
