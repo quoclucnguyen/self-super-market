@@ -1,0 +1,54 @@
+{
+  "mode": "catalog_enrichment",
+  "image": "/home/luc/.openclaw/media/inbound/Screenshot_20260406_102626_LOTTE_Mart---085f59be-40e5-4c20-b9f0-7c18f6d36995.jpg",
+  "ocrOutput": "/home/luc/.openclaw/workspace/skills/invoice-to-inventory/runs/telegram-950/receipt_ocr_output.json",
+  "candidateOutput": "/home/luc/.openclaw/workspace/skills/invoice-to-inventory/runs/telegram-950/receipt_catalog_candidates.json",
+  "summary": {
+    "sourceItems": 59,
+    "uniqueBarcodes": 57
+  },
+  "batchSize": 8,
+  "batches": [
+    {
+      "batchNumber": 1,
+      "count": 8,
+      "path": "/home/luc/.openclaw/workspace/skills/invoice-to-inventory/runs/telegram-950/enrichment_batch_01.json"
+    },
+    {
+      "batchNumber": 2,
+      "count": 8,
+      "path": "/home/luc/.openclaw/workspace/skills/invoice-to-inventory/runs/telegram-950/enrichment_batch_02.json"
+    },
+    {
+      "batchNumber": 3,
+      "count": 8,
+      "path": "/home/luc/.openclaw/workspace/skills/invoice-to-inventory/runs/telegram-950/enrichment_batch_03.json"
+    },
+    {
+      "batchNumber": 4,
+      "count": 8,
+      "path": "/home/luc/.openclaw/workspace/skills/invoice-to-inventory/runs/telegram-950/enrichment_batch_04.json"
+    },
+    {
+      "batchNumber": 5,
+      "count": 8,
+      "path": "/home/luc/.openclaw/workspace/skills/invoice-to-inventory/runs/telegram-950/enrichment_batch_05.json"
+    },
+    {
+      "batchNumber": 6,
+      "count": 8,
+      "path": "/home/luc/.openclaw/workspace/skills/invoice-to-inventory/runs/telegram-950/enrichment_batch_06.json"
+    },
+    {
+      "batchNumber": 7,
+      "count": 8,
+      "path": "/home/luc/.openclaw/workspace/skills/invoice-to-inventory/runs/telegram-950/enrichment_batch_07.json"
+    },
+    {
+      "batchNumber": 8,
+      "count": 1,
+      "path": "/home/luc/.openclaw/workspace/skills/invoice-to-inventory/runs/telegram-950/enrichment_batch_08.json"
+    }
+  ],
+  "nextStep": "Spawn sub-agents using each enrichment_batch_XX.json file for web lookup and metadata normalization."
+}

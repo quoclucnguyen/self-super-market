@@ -1,0 +1,110 @@
+{
+  "batchNumber": 3,
+  "batchSize": 8,
+  "products": [
+    {
+      "barcode": "8935297102972",
+      "rawName": "COM RANG DUA BO CJ 210G",
+      "itemType": "packaged",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 81.8,
+      "searchQueries": [
+        "8935297102972",
+        "8935297102972 COM RANG DUA BO CJ 210G",
+        "COM RANG DUA BO CJ 210G"
+      ],
+      "rawLine": "613 COM RANG DUA BO CJ 210G || 8935297102972 18908 1 18,9088"
+    },
+    {
+      "barcode": "2040656000003",
+      "rawName": "CU CAI TRANG",
+      "itemType": "weighted",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 76.5,
+      "searchQueries": [
+        "2040656000003",
+        "2040656000003 CU CAI TRANG",
+        "CU CAI TRANG"
+      ],
+      "rawLine": "903 CU CAI TRANG || 2040656000003 29988 9,345 19,316"
+    },
+    {
+      "barcode": "2040386000007",
+      "rawName": "CU DEN DA LAT",
+      "itemType": "weighted",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 90.0,
+      "searchQueries": [
+        "2040386000007",
+        "2040386000007 CU DEN DA LAT",
+        "CU DEN DA LAT"
+      ],
+      "rawLine": "802 CU DEN DA LAT || 2040386000007 62908 9.445 27,991"
+    },
+    {
+      "barcode": "8935015521269",
+      "rawName": "DUONG MIA LONG BIEN HOA 7@@ML",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 87.6,
+      "searchQueries": [
+        "8935015521269",
+        "8935015521269 DUONG MIA LONG BIEN HOA 7@@ML",
+        "DUONG MIA LONG BIEN HOA 7@@ML"
+      ],
+      "rawLine": "@37 DUOG MIA LONG BIEN HOA 7@@ML || 8935015521269 29908 2 59, 800"
+    },
+    {
+      "barcode": "8936028946716",
+      "rawName": "G.VI THIT NUONG SA BARONA8@G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 82.2,
+      "searchQueries": [
+        "8936028946716",
+        "8936028946716 G.VI THIT NUONG SA BARONA8@G",
+        "G.VI THIT NUONG SA BARONA8@G"
+      ],
+      "rawLine": "@31 G.VI THIT NUONG SA BARONA8@G || 8936028946716 11908 1 11,908"
+    },
+    {
+      "barcode": "8935319716130",
+      "rawName": "GA POPCORN CH.GION C.P 300G",
+      "itemType": "packaged",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 77.5,
+      "searchQueries": [
+        "8935319716130",
+        "8935319716130 GA POPCORN CH.GION C.P 300G",
+        "GA POPCORN CH.GION C.P 300G"
+      ],
+      "rawLine": "6915 GA POPCORN CH.GION C.P 300G || 8935319716130 39908 1 39,900"
+    },
+    {
+      "barcode": "8938516876935",
+      "rawName": "GAO THOM ST25 NEPTUNE SPECIAL 5K",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 89.4,
+      "searchQueries": [
+        "8938516876935",
+        "8938516876935 GAO THOM ST25 NEPTUNE SPECIAL 5K",
+        "GAO THOM ST25 NEPTUNE SPECIAL 5K"
+      ],
+      "rawLine": "056 GAO THOM ST25 NEPTUNE SPECIAL 5K || 8938516876935 1359008 1 135, 908"
+    },
+    {
+      "barcode": "8936191314737",
+      "rawName": "GIA VI HOAN CHINH CA KHO LANG VD MA BAY 109G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 88.8,
+      "searchQueries": [
+        "8936191314737",
+        "8936191314737 GIA VI HOAN CHINH CA KHO LANG VD MA BAY 109G",
+        "GIA VI HOAN CHINH CA KHO LANG VD MA BAY 109G"
+      ],
+      "rawLine": "0923 GVHC CA KHO LANG VD MA BAY 109G || 8936191314737 19209 1 18,208"
+    }
+  ]
+}

@@ -32,11 +32,15 @@ export function ProductFormReact19({
 }: ProductFormReact19Props) {
   const [state, formAction, isPending] = useActionState(
     async (_: { error?: string; success?: boolean } | null, formData: FormData) => {
+      const rawPrice = formData.get('price');
+      const normalizedPrice = typeof rawPrice === 'string' ? rawPrice.trim() : '';
+
       // Client-side validation using Zod
       const data: ProductInput = {
         name: formData.get('name') as string,
         barcode: formData.get('barcode') as string,
-        price: parseFloat(formData.get('price') as string) || 0,
+        price: normalizedPrice ? parseFloat(normalizedPrice) : undefined,
+        unit: (formData.get('unit') as string) || 'Cái',
         description: formData.get('description') as string || '',
         category: formData.get('category') as string || '',
         stockQuantity: parseInt(formData.get('stockQuantity') as string) || 0,
@@ -132,7 +136,7 @@ export function ProductFormReact19({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Price ($) <span className="text-red-500">*</span>
+            Price ($)
           </label>
           <input
             type="number"
@@ -140,9 +144,23 @@ export function ProductFormReact19({
             name="price"
             step="0.01"
             min="0"
-            defaultValue={initialData?.price || 0}
+            defaultValue={typeof initialData?.price === 'number' ? initialData.price : undefined}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600"
-            placeholder="0.00"
+            placeholder="Leave blank if unavailable"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="unit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Unit <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="unit"
+            name="unit"
+            defaultValue={initialData?.unit || 'Cái'}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600"
+            placeholder="Cái"
           />
         </div>
 
@@ -155,7 +173,7 @@ export function ProductFormReact19({
             id="stockQuantity"
             name="stockQuantity"
             min="0"
-            defaultValue={initialData?.stockQuantity || 0}
+            defaultValue={typeof initialData?.stockQuantity === 'number' ? initialData.stockQuantity : 0}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600"
             placeholder="0"
           />

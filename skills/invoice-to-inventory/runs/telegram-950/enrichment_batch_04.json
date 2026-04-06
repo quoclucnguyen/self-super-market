@@ -1,0 +1,110 @@
+{
+  "batchNumber": 4,
+  "batchSize": 8,
+  "products": [
+    {
+      "barcode": "8936049052811",
+      "rawName": "GIAM TRANG OTOKT 450ML",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 85.0,
+      "searchQueries": [
+        "8936049052811",
+        "8936049052811 GIAM TRANG OTOKT 450ML",
+        "GIAM TRANG OTOKT 450ML"
+      ],
+      "rawLine": "932 GIAM TRANG OTOKT 450ML || 8936049052811 11908 1 11,908"
+    },
+    {
+      "barcode": "2048586000005",
+      "rawName": "KHOAI LANG GIONG NHAT",
+      "itemType": "weighted",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.8,
+      "searchQueries": [
+        "2048586000005",
+        "2048586000005 KHOAI LANG GIONG NHAT",
+        "KHOAI LANG GIONG NHAT"
+      ],
+      "rawLine": "@@6 KHOAT LANG GIONG NHAT || 2048586000005 57988 1.490 86,271"
+    },
+    {
+      "barcode": "2273596000004",
+      "rawName": "KHOAI TAY VANG",
+      "itemType": "weighted",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 73.5,
+      "searchQueries": [
+        "2273596000004",
+        "2273596000004 KHOAI TAY VANG",
+        "KHOAI TAY VANG"
+      ],
+      "rawLine": "904 KHOAT TAY VANG || 2273596000004 46900 0,885 41,507"
+    },
+    {
+      "barcode": "8801073114814",
+      "rawName": "KR-MI K.GA SAMYANG CREAM14@G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 82.8,
+      "searchQueries": [
+        "8801073114814",
+        "8801073114814 KR-MI K.GA SAMYANG CREAM14@G",
+        "KR-MI K.GA SAMYANG CREAM14@G"
+      ],
+      "rawLine": "@5@ KR-MI K.GA SAMYANG CREAM14@G || 8801073114814 35908 1 35,900"
+    },
+    {
+      "barcode": "8935297101531",
+      "rawName": "LAU TOKBOKKI CHA CA CJ 3706",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 87.8,
+      "searchQueries": [
+        "8935297101531",
+        "8935297101531 LAU TOKBOKKI CHA CA CJ 3706",
+        "LAU TOKBOKKI CHA CA CJ 3706"
+      ],
+      "rawLine": "619 LAU TOKBOKKI CHA CA CJ 3706 || 8935297101531 54909 1 54,990"
+    },
+    {
+      "barcode": "6971284299264",
+      "rawName": "LTS HAIDILAO CA CHUA X.HAM 2826",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 86.8,
+      "searchQueries": [
+        "6971284299264",
+        "6971284299264 LTS HAIDILAO CA CHUA X.HAM 2826",
+        "LTS HAIDILAO CA CHUA X.HAM 2826"
+      ],
+      "rawLine": "@01 LTS HAIDILAO C.CHUA X.HAM 2826 || 6971284299264 79900 2 159, 800"
+    },
+    {
+      "barcode": "6975742473426",
+      "rawName": "LTS RAU CU HAIDILAO CA CHUA 285G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 91.4,
+      "searchQueries": [
+        "6975742473426",
+        "6975742473426 LTS RAU CU HAIDILAO CA CHUA 285G",
+        "LTS RAU CU HAIDILAO CA CHUA 285G"
+      ],
+      "rawLine": "855 LTS RAU CU HAIDILAO CA CHUA 285G || 6975742473426 64908 1 64,908"
+    },
+    {
+      "barcode": "8936048472986",
+      "rawName": "MI 3 MIEN GOLD CAY 3 CAP DO 75G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.2,
+      "searchQueries": [
+        "8936048472986",
+        "8936048472986 MI 3 MIEN GOLD CAY 3 CAP DO 75G",
+        "MI 3 MIEN GOLD CAY 3 CAP DO 75G"
+      ],
+      "rawLine": "047 MI 3 MIEN GOLD CAY 3 CAP DO 75G || 8936048472986 3808 1 3,800"
+    }
+  ]
+}

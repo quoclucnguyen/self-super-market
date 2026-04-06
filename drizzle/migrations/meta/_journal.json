@@ -8,6 +8,20 @@
       "when": 1775200049367,
       "tag": "0000_conscious_jazinda",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775448921116,
+      "tag": "0001_product_centric_upgrade",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775449199400,
+      "tag": "0002_enforce_product_category_not_null",
+      "breakpoints": true
     }
   ]
 }

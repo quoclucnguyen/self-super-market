@@ -1,14 +1,46 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { Plus, X, Loader2, Trash2 } from 'lucide-react';
 import { ProductForm } from './ProductForm';
 import { DeleteDialog } from './DeleteDialog';
 import { useToast } from './Toast';
 import { SearchBar } from './SearchBar';
-import type { Product } from '@/drizzle/schema';
 import type { ProductInput } from '@/lib/validations/product';
+
+type ProductListItem = {
+  id: number;
+  name: string;
+  barcode: string;
+  sku: string | null;
+  price: string;
+  description: string | null;
+  category: string | null;
+  categoryName?: string | null;
+  brandName?: string | null;
+  unit: string;
+  weightVolume: string | null;
+  origin: string | null;
+  ingredients: string | null;
+  nutritionalInfo: string | null;
+  usageInstructions: string | null;
+  storageInstructions: string | null;
+  shelfLifeDays: number | null;
+  stockQuantity: number;
+  imageUrl: string | null;
+  imagePublicId: string | null;
+  isActive: boolean;
+  images?: Array<{
+    id?: number;
+    productId?: number;
+    imageUrl: string;
+    imagePublicId: string;
+    isPrimary: boolean;
+    order: number;
+    createdAt?: Date | string;
+  }>;
+};
 
 interface PaginationInfo {
   page: number;
@@ -18,12 +50,12 @@ interface PaginationInfo {
 }
 
 interface ProductsResponse {
-  products: Product[];
+  products: ProductListItem[];
   pagination: PaginationInfo;
 }
 
 interface AdminPageClientProps {
-  initialProducts: Product[];
+  initialProducts: ProductListItem[];
   initialPagination: PaginationInfo;
   categories: string[];
 }
@@ -34,19 +66,19 @@ export function AdminPageClient({
   categories,
 }: AdminPageClientProps) {
   // State
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<ProductListItem[]>(initialProducts);
   const [pagination, setPagination] = useState<PaginationInfo>(initialPagination);
   const [isLoading, setIsLoading] = useState(false);
   const [searchParams, setSearchParams] = useState({ search: '', category: '' });
 
   // Form state
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ProductListItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<ProductListItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const toast = useToast();
@@ -68,7 +100,7 @@ export function AdminPageClient({
       setProducts(data.products);
       setPagination(data.pagination);
       setSearchParams({ search: params.search || '', category: params.category || '' });
-    } catch (error) {
+    } catch {
       toast.error('Failed to load products');
     } finally {
       setIsLoading(false);
@@ -82,7 +114,7 @@ export function AdminPageClient({
   }, []);
 
   // Start editing product
-  const startEdit = useCallback((product: Product) => {
+  const startEdit = useCallback((product: ProductListItem) => {
     setFormMode('edit');
     setSelectedProduct(product);
   }, []);
@@ -132,7 +164,7 @@ export function AdminPageClient({
   }, [formMode, selectedProduct, toast, clearForm]);
 
   // Open delete dialog
-  const openDeleteDialog = useCallback((product: Product) => {
+  const openDeleteDialog = useCallback((product: ProductListItem) => {
     setProductToDelete(product);
     setDeleteDialogOpen(true);
   }, []);
@@ -292,12 +324,30 @@ export function AdminPageClient({
                     initialData={selectedProduct ? {
                       name: selectedProduct.name,
                       barcode: selectedProduct.barcode,
+                      sku: selectedProduct.sku || undefined,
                       price: parseFloat(selectedProduct.price),
+                      unit: selectedProduct.unit,
+                      weightVolume: selectedProduct.weightVolume || undefined,
+                      categoryName: selectedProduct.categoryName || selectedProduct.category || undefined,
+                      brandName: selectedProduct.brandName || undefined,
+                      origin: selectedProduct.origin || undefined,
+                      ingredients: selectedProduct.ingredients || undefined,
+                      nutritionalInfo: selectedProduct.nutritionalInfo || undefined,
+                      usageInstructions: selectedProduct.usageInstructions || undefined,
+                      storageInstructions: selectedProduct.storageInstructions || undefined,
+                      shelfLifeDays: selectedProduct.shelfLifeDays || undefined,
                       description: selectedProduct.description || undefined,
                       category: selectedProduct.category || undefined,
                       stockQuantity: selectedProduct.stockQuantity,
                       imageUrl: selectedProduct.imageUrl || undefined,
                       imagePublicId: selectedProduct.imagePublicId || undefined,
+                      images: selectedProduct.images?.map((image, index) => ({
+                        imageUrl: image.imageUrl,
+                        imagePublicId: image.imagePublicId,
+                        isPrimary: image.isPrimary,
+                        order: image.order ?? index,
+                      })) || [],
+                      isActive: selectedProduct.isActive,
                     } : undefined}
                     onSubmit={handleSubmit}
                     submitLabel={formMode === 'create' ? 'Create Product' : 'Update Product'}
@@ -329,10 +379,10 @@ export function AdminPageClient({
 
 // Product List Panel Component
 interface ProductListPanelProps {
-  products: Product[];
-  selectedProduct: Product | null;
-  onSelect: (product: Product) => void;
-  onDelete: (product: Product) => void;
+  products: ProductListItem[];
+  selectedProduct: ProductListItem | null;
+  onSelect: (product: ProductListItem) => void;
+  onDelete: (product: ProductListItem) => void;
   isLoading: boolean;
 }
 

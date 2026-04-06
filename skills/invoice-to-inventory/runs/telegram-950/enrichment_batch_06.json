@@ -1,0 +1,110 @@
+{
+  "batchNumber": 6,
+  "batchSize": 8,
+  "products": [
+    {
+      "barcode": "8934563131258",
+      "rawName": "MI SIUKAY BO 127G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 86.2,
+      "searchQueries": [
+        "8934563131258",
+        "8934563131258 MI SIUKAY BO 127G",
+        "MI SIUKAY BO 127G"
+      ],
+      "rawLine": "@39 MI SIUKAY BO 127G || 8934563131258 12568 1 12,508"
+    },
+    {
+      "barcode": "8938502881929",
+      "rawName": "MIEN DONG VIET CUONG 2996",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 87.0,
+      "searchQueries": [
+        "8938502881929",
+        "8938502881929 MIEN DONG VIET CUONG 2996",
+        "MIEN DONG VIET CUONG 2996"
+      ],
+      "rawLine": "934 MIEN DONG VIET CUONG 2996 || 8938502881929 22199 1 22,198"
+    },
+    {
+      "barcode": "8934563301156",
+      "rawName": "MIEN P.HUONG SUON HEO 55G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.0,
+      "searchQueries": [
+        "8934563301156",
+        "8934563301156 MIEN P.HUONG SUON HEO 55G",
+        "MIEN P.HUONG SUON HEO 55G"
+      ],
+      "rawLine": "848 MIEN P.HUONG SUON HEO 55G || 8934563301156 18908 1 19, 908"
+    },
+    {
+      "barcode": "8934563358112",
+      "rawName": "MIEN PHU HUONG VI GA 53G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 90.2,
+      "searchQueries": [
+        "8934563358112",
+        "8934563358112 MIEN PHU HUONG VI GA 53G",
+        "MIEN PHU HUONG VI GA 53G"
+      ],
+      "rawLine": "040 MIEN PHU HUONG VI GA 53G || 8934563358112 11508 1 11,508"
+    },
+    {
+      "barcode": "8938582736861",
+      "rawName": "NAM DONG CO KHO T.ANH 1096",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 86.0,
+      "searchQueries": [
+        "8938582736861",
+        "8938582736861 NAM DONG CO KHO T.ANH 1096",
+        "NAM DONG CO KHO T.ANH 1096"
+      ],
+      "rawLine": "0843 NAM DONG CO KHO T.ANH 1096 || 8938582736861 44900 1 44,900"
+    },
+    {
+      "barcode": "8936079284229",
+      "rawName": "NT-BOT GUNG DH FOODS 30G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.8,
+      "searchQueries": [
+        "8936079284229",
+        "8936079284229 NT-BOT GUNG DH FOODS 30G",
+        "NT-BOT GUNG DH FOODS 30G"
+      ],
+      "rawLine": "936 NT-BOT GUNG DH FOODS 30G || 8936079284229 16598 1 16,500"
+    },
+    {
+      "barcode": "8936079284251",
+      "rawName": "NT-BOT HANH DH F00DS 40G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.0,
+      "searchQueries": [
+        "8936079284251",
+        "8936079284251 NT-BOT HANH DH F00DS 40G",
+        "NT-BOT HANH DH F00DS 40G"
+      ],
+      "rawLine": "935 NT-BOT HANH DH F00DS 40G || 8936079284251 18598 1 18, 598"
+    },
+    {
+      "barcode": "8935058907525",
+      "rawName": "PHI LE GA CP 590G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 88.2,
+      "searchQueries": [
+        "8935058907525",
+        "8935058907525 PHI LE GA CP 590G",
+        "PHI LE GA CP 590G"
+      ],
+      "rawLine": "921 PHILE GA CPMN 590G || 8935058907525 44900 1 44,900"
+    }
+  ]
+}

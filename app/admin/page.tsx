@@ -1,63 +1,111 @@
 import { AdminPageClient } from '@/components/admin/AdminPageClient';
 import { db } from '@/lib/db';
-import { products, type Product } from '@/drizzle/schema';
-import { sql, like, or, and, desc } from 'drizzle-orm';
+import { brands, categories, products, productImages } from '@/drizzle/schema';
+import { and, asc, desc, inArray, sql } from 'drizzle-orm';
 
 async function getProducts(searchParams: Awaited<Promise<{ search?: string; category?: string; page?: string }>>) {
   const { search, category, page = '1' } = searchParams;
   const limit = 20;
   const offset = (parseInt(page) - 1) * limit;
 
-  // Build conditions using Drizzle's type-safe operators
-  const conditions = [];
+  const conditions: Array<ReturnType<typeof sql>> = [];
+
   if (search) {
-    conditions.push(
-      or(
-        like(products.name, `%${search}%`),
-        like(products.barcode, `%${search}%`),
-        like(products.description || '', `%${search}%`)
+    const pattern = `%${search}%`;
+    conditions.push(sql`
+      (
+        ${products.name} ILIKE ${pattern}
+        OR ${products.barcode} ILIKE ${pattern}
+        OR ${products.sku} ILIKE ${pattern}
+        OR ${products.description} ILIKE ${pattern}
       )
-    );
+    `);
   }
+
   if (category) {
-    conditions.push(sql`${products.category} = ${category}`);
+    const pattern = `%${category}%`;
+    conditions.push(sql`${products.category} ILIKE ${pattern}`);
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  // Get products
+  // Get products for current page
   const productList = await db
-    .select()
+    .select({
+      product: products,
+      categoryName: categories.name,
+      brandName: brands.name,
+    })
     .from(products)
+    .leftJoin(categories, sql`${products.categoryId} = ${categories.id}`)
+    .leftJoin(brands, sql`${products.brandId} = ${brands.id}`)
     .where(whereClause)
     .orderBy(desc(products.createdAt))
     .limit(limit)
     .offset(offset);
 
-  // Get total count
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
     .from(products)
     .where(whereClause);
 
-  // Get unique categories
-  const categoriesResult = await db
+  const productIds = productList.map((row) => row.product.id);
+  const imageRows = productIds.length
+    ? await db
+        .select()
+        .from(productImages)
+        .where(inArray(productImages.productId, productIds))
+        .orderBy(asc(productImages.productId), asc(productImages.order), asc(productImages.id))
+    : [];
+
+  const imageMap = new Map<number, Array<typeof productImages.$inferSelect>>();
+  imageRows.forEach((image) => {
+    const current = imageMap.get(image.productId) ?? [];
+    current.push(image);
+    imageMap.set(image.productId, current);
+  });
+
+  const productsWithImages = productList.map((row) => {
+    const product = row.product;
+    const images = imageMap.get(product.id) ?? [];
+    const primary = images.find((image) => image.isPrimary) ?? images[0] ?? null;
+
+    return {
+      ...product,
+      imageUrl: primary?.imageUrl ?? product.imageUrl,
+      imagePublicId: primary?.imagePublicId ?? product.imagePublicId,
+      images,
+      categoryName: row.categoryName ?? product.category,
+      brandName: row.brandName,
+    };
+  });
+
+  const categoriesFromMaster = await db
+    .select({ name: categories.name })
+    .from(categories)
+    .orderBy(categories.name);
+
+  const categoriesFromProducts = await db
     .selectDistinct({ category: products.category })
     .from(products)
-    .where(sql`${products.category} IS NOT NULL`)
-    .orderBy(products.category);
+    .where(sql`${products.category} IS NOT NULL`);
 
-  const categories = categoriesResult.map((c) => c.category).filter(Boolean) as string[];
+  const categoriesList = Array.from(
+    new Set([
+      ...categoriesFromMaster.map((c) => c.name),
+      ...categoriesFromProducts.map((c) => c.category).filter((value): value is string => Boolean(value)),
+    ]),
+  ).sort((a, b) => a.localeCompare(b));
 
   return {
-    products: productList as Product[],
+    products: productsWithImages,
     pagination: {
       page: parseInt(page),
       limit,
       total: Number(count),
       totalPages: Math.ceil(Number(count) / limit),
     },
-    categories,
+    categories: categoriesList,
   };
 }
 

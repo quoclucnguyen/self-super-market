@@ -1,0 +1,753 @@
+{
+  "merchantName": "LOTTE Mart Phu Tho",
+  "invoiceDate": "2026-03-14 20:33:58",
+  "currency": "VND",
+  "mode": "catalog_enrichment",
+  "productCandidates": [
+    {
+      "barcode": "8936191317806",
+      "rawName": "B.GIA VI HOAN CHINH CA CHUNG TUONG M.BAY 1616",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.5,
+      "searchQueries": [
+        "8936191317806",
+        "8936191317806 B.GIA VI HOAN CHINH CA CHUNG TUONG M.BAY 1616",
+        "B.GIA VI HOAN CHINH CA CHUNG TUONG M.BAY 1616"
+      ],
+      "rawLine": "852 B.GVHC CA CHUNG TUONG M.BAY 1616 || 8936191317806 16598 1 16,500"
+    },
+    {
+      "barcode": "8934717402302",
+      "rawName": "BANH XEP KIEU HAN 365 THIT RAU 350G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 85.2,
+      "searchQueries": [
+        "8934717402302",
+        "8934717402302 BANH XEP KIEU HAN 365 THIT RAU 350G",
+        "BANH XEP KIEU HAN 365 THIT RAU 350G"
+      ],
+      "rawLine": "612 BX KIEU HAN 365 THIT&RAU 350G || 8934717402302 52909 1 52,908"
+    },
+    {
+      "barcode": "8936123168487",
+      "rawName": "BAU XANH 55096",
+      "itemType": "packaged",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 81.0,
+      "searchQueries": [
+        "8936123168487",
+        "8936123168487 BAU XANH 55096",
+        "BAU XANH 55096"
+      ],
+      "rawLine": "0909 BAU XANH 55096 || 8936123168487 12908 1 12,900"
+    },
+    {
+      "barcode": "8938502525916",
+      "rawName": "BB T.P NHAN THIT 259G",
+      "itemType": "packaged",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 81.0,
+      "searchQueries": [
+        "8938502525916",
+        "8938502525916 BB T.P NHAN THIT 259G",
+        "BB T.P NHAN THIT 259G"
+      ],
+      "rawLine": "0929 BB T.P NHAN THIT 259G || 8938502525916 28909 1 28,909"
+    },
+    {
+      "barcode": "0499290490908",
+      "rawName": "BI DAO 5096",
+      "itemType": "packaged",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 81.2,
+      "searchQueries": [
+        "0499290490908",
+        "0499290490908 BI DAO 5096",
+        "BI DAO 5096"
+      ],
+      "rawLine": "0908 BI DAO 5096 || 0499290490908 15908 1 15,908"
+    },
+    {
+      "barcode": "0480298490008",
+      "rawName": "BI DAO 5906",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 82.2,
+      "searchQueries": [
+        "0480298490008",
+        "0480298490008 BI DAO 5906",
+        "BI DAO 5906"
+      ],
+      "rawLine": "908 BI DAO 5906 || 0480298490008 15900 1 15,909"
+    },
+    {
+      "barcode": "2292116808803",
+      "rawName": "BI HO LO",
+      "itemType": "weighted",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 78.0,
+      "searchQueries": [
+        "2292116808803",
+        "2292116808803 BI HO LO",
+        "BI HO LO"
+      ],
+      "rawLine": "@07 BI HO LO || 2292116808803 19908 9,820 16,318"
+    },
+    {
+      "barcode": "8934777208412",
+      "rawName": "BOT BAP TAI KY 150G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 83.0,
+      "searchQueries": [
+        "8934777208412",
+        "8934777208412 BOT BAP TAI KY 150G",
+        "BOT BAP TAI KY 150G"
+      ],
+      "rawLine": "@28 BOT BAP TAI KY 150G || 8934777208412 18908 1 19, 900"
+    },
+    {
+      "barcode": "8936109182007",
+      "rawName": "BOT GIA VI HOAN CHINH CA KHO NGHE 506",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 89.5,
+      "searchQueries": [
+        "8936109182007",
+        "8936109182007 BOT GIA VI HOAN CHINH CA KHO NGHE 506",
+        "BOT GIA VI HOAN CHINH CA KHO NGHE 506"
+      ],
+      "rawLine": "924 BOT GVHC CA KHO NGHE 506 || 8936109182007 7599 1 7,599"
+    },
+    {
+      "barcode": "8936109181994",
+      "rawName": "BOT GIA VI HOAN CHINH CA KHO TO 60G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 88.1,
+      "searchQueries": [
+        "8936109181994",
+        "8936109181994 BOT GIA VI HOAN CHINH CA KHO TO 60G",
+        "BOT GIA VI HOAN CHINH CA KHO TO 60G"
+      ],
+      "rawLine": "929 BOT GVHC CA KHO TO 60G || 8936109181994 14909 1 14,908"
+    },
+    {
+      "barcode": "8934563973155",
+      "rawName": "BUN GIO HEO HANG NGA 75G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 83.5,
+      "searchQueries": [
+        "8934563973155",
+        "8934563973155 BUN GIO HEO HANG NGA 75G",
+        "BUN GIO HEO HANG NGA 75G"
+      ],
+      "rawLine": "@45 BUN GIO HEO HANG NGA 75G || 8934563973155 89099 1 8,900"
+    },
+    {
+      "barcode": "2292949999905",
+      "rawName": "CA CHUA BEEF",
+      "itemType": "weighted",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.8,
+      "searchQueries": [
+        "2292949999905",
+        "2292949999905 CA CHUA BEEF",
+        "CA CHUA BEEF"
+      ],
+      "rawLine": "619 CA CHUA BEEF || 2292949999905 48900 0.850 41,565"
+    },
+    {
+      "barcode": "2292076000006",
+      "rawName": "CA ROT",
+      "itemType": "weighted",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 74.0,
+      "searchQueries": [
+        "2292076000006",
+        "2292076000006 CA ROT",
+        "CA ROT"
+      ],
+      "rawLine": "895 CA ROT || 2292076000006 49908 1.010 58,399"
+    },
+    {
+      "barcode": "8934717421525",
+      "rawName": "CA VIEN NGON CAU TRE 59096",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 83.5,
+      "searchQueries": [
+        "8934717421525",
+        "8934717421525 CA VIEN NGON CAU TRE 59096",
+        "CA VIEN NGON CAU TRE 59096"
+      ],
+      "rawLine": "611 CA VIEN NGON CAU TRE 59096 || 8934717421525 39900 1 39,900"
+    },
+    {
+      "barcode": "8936059812232",
+      "rawName": "CL-GTAY CHONG DINH 58T 30X22",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 87.0,
+      "searchQueries": [
+        "8936059812232",
+        "8936059812232 CL-GTAY CHONG DINH 58T 30X22",
+        "CL-GTAY CHONG DINH 58T 30X22"
+      ],
+      "rawLine": "0854 CL-GTAY CHONG DINH 58T 30X22 || 8936059812232 54900 1 54,908"
+    },
+    {
+      "barcode": "8935297102873",
+      "rawName": "COM CHIEN GA CHAY TOI CJ2196",
+      "itemType": "packaged",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 80.8,
+      "searchQueries": [
+        "8935297102873",
+        "8935297102873 COM CHIEN GA CHAY TOI CJ2196",
+        "COM CHIEN GA CHAY TOI CJ2196"
+      ],
+      "rawLine": "@14 COM CHIEN GA CHAY TOI CJ2196 || 8935297102873 18908 1 18,908"
+    },
+    {
+      "barcode": "8935297102972",
+      "rawName": "COM RANG DUA BO CJ 210G",
+      "itemType": "packaged",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 81.8,
+      "searchQueries": [
+        "8935297102972",
+        "8935297102972 COM RANG DUA BO CJ 210G",
+        "COM RANG DUA BO CJ 210G"
+      ],
+      "rawLine": "613 COM RANG DUA BO CJ 210G || 8935297102972 18908 1 18,9088"
+    },
+    {
+      "barcode": "2040656000003",
+      "rawName": "CU CAI TRANG",
+      "itemType": "weighted",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 76.5,
+      "searchQueries": [
+        "2040656000003",
+        "2040656000003 CU CAI TRANG",
+        "CU CAI TRANG"
+      ],
+      "rawLine": "903 CU CAI TRANG || 2040656000003 29988 9,345 19,316"
+    },
+    {
+      "barcode": "2040386000007",
+      "rawName": "CU DEN DA LAT",
+      "itemType": "weighted",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 90.0,
+      "searchQueries": [
+        "2040386000007",
+        "2040386000007 CU DEN DA LAT",
+        "CU DEN DA LAT"
+      ],
+      "rawLine": "802 CU DEN DA LAT || 2040386000007 62908 9.445 27,991"
+    },
+    {
+      "barcode": "8935015521269",
+      "rawName": "DUONG MIA LONG BIEN HOA 7@@ML",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 87.6,
+      "searchQueries": [
+        "8935015521269",
+        "8935015521269 DUONG MIA LONG BIEN HOA 7@@ML",
+        "DUONG MIA LONG BIEN HOA 7@@ML"
+      ],
+      "rawLine": "@37 DUOG MIA LONG BIEN HOA 7@@ML || 8935015521269 29908 2 59, 800"
+    },
+    {
+      "barcode": "8936028946716",
+      "rawName": "G.VI THIT NUONG SA BARONA8@G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 82.2,
+      "searchQueries": [
+        "8936028946716",
+        "8936028946716 G.VI THIT NUONG SA BARONA8@G",
+        "G.VI THIT NUONG SA BARONA8@G"
+      ],
+      "rawLine": "@31 G.VI THIT NUONG SA BARONA8@G || 8936028946716 11908 1 11,908"
+    },
+    {
+      "barcode": "8935319716130",
+      "rawName": "GA POPCORN CH.GION C.P 300G",
+      "itemType": "packaged",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 77.5,
+      "searchQueries": [
+        "8935319716130",
+        "8935319716130 GA POPCORN CH.GION C.P 300G",
+        "GA POPCORN CH.GION C.P 300G"
+      ],
+      "rawLine": "6915 GA POPCORN CH.GION C.P 300G || 8935319716130 39908 1 39,900"
+    },
+    {
+      "barcode": "8938516876935",
+      "rawName": "GAO THOM ST25 NEPTUNE SPECIAL 5K",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 89.4,
+      "searchQueries": [
+        "8938516876935",
+        "8938516876935 GAO THOM ST25 NEPTUNE SPECIAL 5K",
+        "GAO THOM ST25 NEPTUNE SPECIAL 5K"
+      ],
+      "rawLine": "056 GAO THOM ST25 NEPTUNE SPECIAL 5K || 8938516876935 1359008 1 135, 908"
+    },
+    {
+      "barcode": "8936191314737",
+      "rawName": "GIA VI HOAN CHINH CA KHO LANG VD MA BAY 109G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 88.8,
+      "searchQueries": [
+        "8936191314737",
+        "8936191314737 GIA VI HOAN CHINH CA KHO LANG VD MA BAY 109G",
+        "GIA VI HOAN CHINH CA KHO LANG VD MA BAY 109G"
+      ],
+      "rawLine": "0923 GVHC CA KHO LANG VD MA BAY 109G || 8936191314737 19209 1 18,208"
+    },
+    {
+      "barcode": "8936049052811",
+      "rawName": "GIAM TRANG OTOKT 450ML",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 85.0,
+      "searchQueries": [
+        "8936049052811",
+        "8936049052811 GIAM TRANG OTOKT 450ML",
+        "GIAM TRANG OTOKT 450ML"
+      ],
+      "rawLine": "932 GIAM TRANG OTOKT 450ML || 8936049052811 11908 1 11,908"
+    },
+    {
+      "barcode": "2048586000005",
+      "rawName": "KHOAI LANG GIONG NHAT",
+      "itemType": "weighted",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.8,
+      "searchQueries": [
+        "2048586000005",
+        "2048586000005 KHOAI LANG GIONG NHAT",
+        "KHOAI LANG GIONG NHAT"
+      ],
+      "rawLine": "@@6 KHOAT LANG GIONG NHAT || 2048586000005 57988 1.490 86,271"
+    },
+    {
+      "barcode": "2273596000004",
+      "rawName": "KHOAI TAY VANG",
+      "itemType": "weighted",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 73.5,
+      "searchQueries": [
+        "2273596000004",
+        "2273596000004 KHOAI TAY VANG",
+        "KHOAI TAY VANG"
+      ],
+      "rawLine": "904 KHOAT TAY VANG || 2273596000004 46900 0,885 41,507"
+    },
+    {
+      "barcode": "8801073114814",
+      "rawName": "KR-MI K.GA SAMYANG CREAM14@G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 82.8,
+      "searchQueries": [
+        "8801073114814",
+        "8801073114814 KR-MI K.GA SAMYANG CREAM14@G",
+        "KR-MI K.GA SAMYANG CREAM14@G"
+      ],
+      "rawLine": "@5@ KR-MI K.GA SAMYANG CREAM14@G || 8801073114814 35908 1 35,900"
+    },
+    {
+      "barcode": "8935297101531",
+      "rawName": "LAU TOKBOKKI CHA CA CJ 3706",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 87.8,
+      "searchQueries": [
+        "8935297101531",
+        "8935297101531 LAU TOKBOKKI CHA CA CJ 3706",
+        "LAU TOKBOKKI CHA CA CJ 3706"
+      ],
+      "rawLine": "619 LAU TOKBOKKI CHA CA CJ 3706 || 8935297101531 54909 1 54,990"
+    },
+    {
+      "barcode": "6971284299264",
+      "rawName": "LTS HAIDILAO CA CHUA X.HAM 2826",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 86.8,
+      "searchQueries": [
+        "6971284299264",
+        "6971284299264 LTS HAIDILAO CA CHUA X.HAM 2826",
+        "LTS HAIDILAO CA CHUA X.HAM 2826"
+      ],
+      "rawLine": "@01 LTS HAIDILAO C.CHUA X.HAM 2826 || 6971284299264 79900 2 159, 800"
+    },
+    {
+      "barcode": "6975742473426",
+      "rawName": "LTS RAU CU HAIDILAO CA CHUA 285G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 91.4,
+      "searchQueries": [
+        "6975742473426",
+        "6975742473426 LTS RAU CU HAIDILAO CA CHUA 285G",
+        "LTS RAU CU HAIDILAO CA CHUA 285G"
+      ],
+      "rawLine": "855 LTS RAU CU HAIDILAO CA CHUA 285G || 6975742473426 64908 1 64,908"
+    },
+    {
+      "barcode": "8936048472986",
+      "rawName": "MI 3 MIEN GOLD CAY 3 CAP DO 75G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.2,
+      "searchQueries": [
+        "8936048472986",
+        "8936048472986 MI 3 MIEN GOLD CAY 3 CAP DO 75G",
+        "MI 3 MIEN GOLD CAY 3 CAP DO 75G"
+      ],
+      "rawLine": "047 MI 3 MIEN GOLD CAY 3 CAP DO 75G || 8936048472986 3808 1 3,800"
+    },
+    {
+      "barcode": "8936048476012",
+      "rawName": "MI 3 MIEN TOM CHUA CAY 65G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 88.0,
+      "searchQueries": [
+        "8936048476012",
+        "8936048476012 MI 3 MIEN TOM CHUA CAY 65G",
+        "MI 3 MIEN TOM CHUA CAY 65G"
+      ],
+      "rawLine": "041 MI 3 MIEN TOM CHUA CAY 65G || 8936048476012 3508 2 7,900"
+    },
+    {
+      "barcode": "8936048476623",
+      "rawName": "MI 3MIEN GOLD CC THAI 75G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 83.2,
+      "searchQueries": [
+        "8936048476623",
+        "8936048476623 MI 3MIEN GOLD CC THAI 75G",
+        "MI 3MIEN GOLD CC THAI 75G"
+      ],
+      "rawLine": "042 MI 3MIEN GOLD CC THAI 75G || 8936048476623 3808 1 3,800"
+    },
+    {
+      "barcode": "8936104380347",
+      "rawName": "MI C.DINH TOM CHUA CAY 85G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 90.0,
+      "searchQueries": [
+        "8936104380347",
+        "8936104380347 MI C.DINH TOM CHUA CAY 85G",
+        "MI C.DINH TOM CHUA CAY 85G"
+      ],
+      "rawLine": "@44 MI C.DINH TOM CHUA CAY 85G || 8936104380347 8400 1 8,400"
+    },
+    {
+      "barcode": "8934679840327",
+      "rawName": "MI GAU DO GA SOI PHO 63G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 92.0,
+      "searchQueries": [
+        "8934679840327",
+        "8934679840327 MI GAU DO GA SOI PHO 63G",
+        "MI GAU DO GA SOI PHO 63G"
+      ],
+      "rawLine": "846 MI GAU DO GA SOI PHO 63G || 8934679840327 3698 2 7,200"
+    },
+    {
+      "barcode": "8934563184148",
+      "rawName": "MI HAO HAO GA VÀNG 746",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 90.2,
+      "searchQueries": [
+        "8934563184148",
+        "8934563184148 MI HAO HAO GA VÀNG 746",
+        "MI HAO HAO GA VÀNG 746"
+      ],
+      "rawLine": "@38 MI HAO HAO GA VÀNG 746 || 8934563184148 4008 1 4,900"
+    },
+    {
+      "barcode": "8934563183158",
+      "rawName": "MI HAO HAO SA TE H.TIM 75G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 91.2,
+      "searchQueries": [
+        "8934563183158",
+        "8934563183158 MI HAO HAO SA TE H.TIM 75G",
+        "MI HAO HAO SA TE H.TIM 75G"
+      ],
+      "rawLine": "049 MI HAO HAO SA TE H.TIM 75G || 8934563183158 4090 1 4,000"
+    },
+    {
+      "barcode": "8934563666130",
+      "rawName": "MI MODERN GA OT HIEM LY 63G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 89.0,
+      "searchQueries": [
+        "8934563666130",
+        "8934563666130 MI MODERN GA OT HIEM LY 63G",
+        "MI MODERN GA OT HIEM LY 63G"
+      ],
+      "rawLine": "@53 MI MODERN GA OT HIEM LY 63G || 8934563666130 79008 1 7,900"
+    },
+    {
+      "barcode": "8936221044801",
+      "rawName": "MI OMC QXCA TRUNG CA CHUA HK184G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 86.0,
+      "searchQueries": [
+        "8936221044801",
+        "8936221044801 MI OMC QXCA TRUNG CA CHUA HK184G",
+        "MI OMC QXCA TRUNG CA CHUA HK184G"
+      ],
+      "rawLine": "051 MI OMC QXCA TRUNG CA CHUA HK184G || 8936221044801 21298 1 21,200"
+    },
+    {
+      "barcode": "8934563131258",
+      "rawName": "MI SIUKAY BO 127G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 86.2,
+      "searchQueries": [
+        "8934563131258",
+        "8934563131258 MI SIUKAY BO 127G",
+        "MI SIUKAY BO 127G"
+      ],
+      "rawLine": "@39 MI SIUKAY BO 127G || 8934563131258 12568 1 12,508"
+    },
+    {
+      "barcode": "8938502881929",
+      "rawName": "MIEN DONG VIET CUONG 2996",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 87.0,
+      "searchQueries": [
+        "8938502881929",
+        "8938502881929 MIEN DONG VIET CUONG 2996",
+        "MIEN DONG VIET CUONG 2996"
+      ],
+      "rawLine": "934 MIEN DONG VIET CUONG 2996 || 8938502881929 22199 1 22,198"
+    },
+    {
+      "barcode": "8934563301156",
+      "rawName": "MIEN P.HUONG SUON HEO 55G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.0,
+      "searchQueries": [
+        "8934563301156",
+        "8934563301156 MIEN P.HUONG SUON HEO 55G",
+        "MIEN P.HUONG SUON HEO 55G"
+      ],
+      "rawLine": "848 MIEN P.HUONG SUON HEO 55G || 8934563301156 18908 1 19, 908"
+    },
+    {
+      "barcode": "8934563358112",
+      "rawName": "MIEN PHU HUONG VI GA 53G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 90.2,
+      "searchQueries": [
+        "8934563358112",
+        "8934563358112 MIEN PHU HUONG VI GA 53G",
+        "MIEN PHU HUONG VI GA 53G"
+      ],
+      "rawLine": "040 MIEN PHU HUONG VI GA 53G || 8934563358112 11508 1 11,508"
+    },
+    {
+      "barcode": "8938582736861",
+      "rawName": "NAM DONG CO KHO T.ANH 1096",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 86.0,
+      "searchQueries": [
+        "8938582736861",
+        "8938582736861 NAM DONG CO KHO T.ANH 1096",
+        "NAM DONG CO KHO T.ANH 1096"
+      ],
+      "rawLine": "0843 NAM DONG CO KHO T.ANH 1096 || 8938582736861 44900 1 44,900"
+    },
+    {
+      "barcode": "8936079284229",
+      "rawName": "NT-BOT GUNG DH FOODS 30G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.8,
+      "searchQueries": [
+        "8936079284229",
+        "8936079284229 NT-BOT GUNG DH FOODS 30G",
+        "NT-BOT GUNG DH FOODS 30G"
+      ],
+      "rawLine": "936 NT-BOT GUNG DH FOODS 30G || 8936079284229 16598 1 16,500"
+    },
+    {
+      "barcode": "8936079284251",
+      "rawName": "NT-BOT HANH DH F00DS 40G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.0,
+      "searchQueries": [
+        "8936079284251",
+        "8936079284251 NT-BOT HANH DH F00DS 40G",
+        "NT-BOT HANH DH F00DS 40G"
+      ],
+      "rawLine": "935 NT-BOT HANH DH F00DS 40G || 8936079284251 18598 1 18, 598"
+    },
+    {
+      "barcode": "8935058907525",
+      "rawName": "PHI LE GA CP 590G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 88.2,
+      "searchQueries": [
+        "8935058907525",
+        "8935058907525 PHI LE GA CP 590G",
+        "PHI LE GA CP 590G"
+      ],
+      "rawLine": "921 PHILE GA CPMN 590G || 8935058907525 44900 1 44,900"
+    },
+    {
+      "barcode": "8936123168944",
+      "rawName": "SA CAY 2096",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 86.2,
+      "searchQueries": [
+        "8936123168944",
+        "8936123168944 SA CAY 2096",
+        "SA CAY 2096"
+      ],
+      "rawLine": "925 SA CAY 2096 || 8936123168944 7900 1 7,900"
+    },
+    {
+      "barcode": "8936136168449",
+      "rawName": "SATE CHIN-SU TOM OT SA 90G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 87.2,
+      "searchQueries": [
+        "8936136168449",
+        "8936136168449 SATE CHIN-SU TOM OT SA 90G",
+        "SATE CHIN-SU TOM OT SA 90G"
+      ],
+      "rawLine": "933 SATE CHIN-SU TOM OT SA 90G || 8936136168449 11908 1 11,908"
+    },
+    {
+      "barcode": "8934781922529",
+      "rawName": "SOT DAU HU TU XUYEN 0CV 906",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.0,
+      "searchQueries": [
+        "8934781922529",
+        "8934781922529 SOT DAU HU TU XUYEN 0CV 906",
+        "SOT DAU HU TU XUYEN 0CV 906"
+      ],
+      "rawLine": "926 SOT DAU HU TU XUYEN 0CV 906 || 8934781922529 19989 1 19, 900"
+    },
+    {
+      "barcode": "8936013686783",
+      "rawName": "TRUNG VIT MUOI AN LIEN VTD",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 88.3,
+      "searchQueries": [
+        "8936013686783",
+        "8936013686783 TRUNG VIT MUOI AN LIEN VTD",
+        "TRUNG VIT MUOI AN LIEN VTD"
+      ],
+      "rawLine": "616 TRUNG VIT MUOI AN LIEN VTD || 8936013686783 7599 1 7,599"
+    },
+    {
+      "barcode": "8412211436800",
+      "rawName": "TUI NYLON SIZE 35-60",
+      "itemType": "packaged",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 81.8,
+      "searchQueries": [
+        "8412211436800",
+        "8412211436800 TUI NYLON SIZE 35-60",
+        "TUI NYLON SIZE 35-60"
+      ],
+      "rawLine": "922 TUI NYLON SIZE 35-60 || 8412211436800 309 2 698"
+    },
+    {
+      "barcode": "8934717421655",
+      "rawName": "VIÊN H.SAN CTRE DAU HU PMAI 240G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 85.5,
+      "searchQueries": [
+        "8934717421655",
+        "8934717421655 VIÊN H.SAN CTRE DAU HU PMAI 240G",
+        "VIÊN H.SAN CTRE DAU HU PMAI 240G"
+      ],
+      "rawLine": "6917 VIÊN H.SAN CTRE DAU HU PMAI 240G || 8934717421655 55909 1 55,990"
+    },
+    {
+      "barcode": "8936028045254",
+      "rawName": "XOT GIA VI HOAN CHINH BARONA TOM RANG THIT8@G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.0,
+      "searchQueries": [
+        "8936028045254",
+        "8936028045254 XOT GIA VI HOAN CHINH BARONA TOM RANG THIT8@G",
+        "XOT GIA VI HOAN CHINH BARONA TOM RANG THIT8@G"
+      ],
+      "rawLine": "0927 XOT GVHC BARONA TOM RANG THIT8@G || 8936028045254 12908 2 25, 800"
+    },
+    {
+      "barcode": "8936079289872",
+      "rawName": "XOT GIA VI HOAN CHINH KHO MAM RUOC DHF 89G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 82.2,
+      "searchQueries": [
+        "8936079289872",
+        "8936079289872 XOT GIA VI HOAN CHINH KHO MAM RUOC DHF 89G",
+        "XOT GIA VI HOAN CHINH KHO MAM RUOC DHF 89G"
+      ],
+      "rawLine": "939 XOT GVHC KHO MAM RUOC DHF 89G || 8936079289872 13908 1 13,988"
+    },
+    {
+      "barcode": "8935058911645",
+      "rawName": "XX COCKTAIL X.KHOI CP 25096",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 83.7,
+      "searchQueries": [
+        "8935058911645",
+        "8935058911645 XX COCKTAIL X.KHOI CP 25096",
+        "XX COCKTAIL X.KHOI CP 25096"
+      ],
+      "rawLine": "6918 XX COCKTAIL X.KHOI CP 25096 || 8935058911645 42900 1 42,908"
+    }
+  ],
+  "summary": {
+    "sourceItems": 59,
+    "uniqueBarcodes": 57
+  }
+}

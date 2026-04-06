@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
         get: {
           tags: ['Products'],
           summary: 'List all products',
-          description: 'Retrieve a paginated list of products with optional search and category filtering',
+          description: 'Retrieve a paginated list of products with optional search, category and brand filtering',
           parameters: [
             {
               name: 'search',
@@ -56,6 +56,15 @@ export async function GET(request: NextRequest) {
               name: 'category',
               in: 'query',
               description: 'Filter by category',
+              required: false,
+              schema: {
+                type: 'string',
+              },
+            },
+            {
+              name: 'brand',
+              in: 'query',
+              description: 'Filter by brand',
               required: false,
               schema: {
                 type: 'string',
@@ -576,9 +585,72 @@ export async function GET(request: NextRequest) {
               type: 'string',
               description: 'Unique barcode',
             },
+            sku: {
+              type: 'string',
+              nullable: true,
+              description: 'Internal stock keeping unit',
+            },
+            categoryId: {
+              type: 'integer',
+              description: 'Category ID',
+            },
+            categoryName: {
+              type: 'string',
+              nullable: true,
+              description: 'Category name',
+            },
+            brandId: {
+              type: 'integer',
+              nullable: true,
+              description: 'Brand ID',
+            },
+            brandName: {
+              type: 'string',
+              nullable: true,
+              description: 'Brand name',
+            },
             price: {
               type: 'string',
               description: 'Price in decimal format',
+            },
+            unit: {
+              type: 'string',
+              description: 'Selling unit (e.g., Chai, Lon, Kg)',
+            },
+            weightVolume: {
+              type: 'string',
+              nullable: true,
+              description: 'Weight or volume (e.g., 330ml, 1.5kg)',
+            },
+            origin: {
+              type: 'string',
+              nullable: true,
+              description: 'Country of origin / manufacturing location',
+            },
+            ingredients: {
+              type: 'string',
+              nullable: true,
+              description: 'Ingredients list',
+            },
+            nutritionalInfo: {
+              type: 'string',
+              nullable: true,
+              description: 'Nutritional information',
+            },
+            usageInstructions: {
+              type: 'string',
+              nullable: true,
+              description: 'Usage instructions',
+            },
+            storageInstructions: {
+              type: 'string',
+              nullable: true,
+              description: 'Storage instructions',
+            },
+            shelfLifeDays: {
+              type: 'integer',
+              nullable: true,
+              description: 'Shelf life in days',
             },
             description: {
               type: 'string',
@@ -604,6 +676,13 @@ export async function GET(request: NextRequest) {
               type: 'string',
               nullable: true,
               description: 'Cloudinary public ID',
+            },
+            images: {
+              type: 'array',
+              description: 'Product images ordered by display order',
+              items: {
+                $ref: '#/components/schemas/ProductImage',
+              },
             },
             isActive: {
               type: 'boolean',
@@ -623,7 +702,11 @@ export async function GET(request: NextRequest) {
         },
         ProductCreate: {
           type: 'object',
-          required: ['name', 'barcode', 'price'],
+          required: ['name', 'barcode', 'unit'],
+          anyOf: [
+            { required: ['categoryId'] },
+            { required: ['categoryName'] },
+          ],
           properties: {
             name: {
               type: 'string',
@@ -637,11 +720,88 @@ export async function GET(request: NextRequest) {
               maxLength: 50,
               description: 'Unique barcode',
             },
+            sku: {
+              type: 'string',
+              maxLength: 50,
+              nullable: true,
+              description: 'Internal stock keeping unit',
+            },
+            categoryId: {
+              type: 'integer',
+              minimum: 1,
+              description: 'Existing category ID',
+            },
+            categoryName: {
+              type: 'string',
+              maxLength: 100,
+              nullable: true,
+              description: 'Category name (used to auto-create if missing)',
+            },
+            brandId: {
+              type: 'integer',
+              minimum: 1,
+              nullable: true,
+              description: 'Existing brand ID',
+            },
+            brandName: {
+              type: 'string',
+              maxLength: 100,
+              nullable: true,
+              description: 'Brand name (used to auto-create if missing)',
+            },
             price: {
               type: 'number',
               exclusiveMinimum: 0,
               maximum: 1000000,
-              description: 'Product price',
+              description: 'Product price (optional)',
+            },
+            unit: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 20,
+              description: 'Selling unit (e.g., Chai, Lon, Kg)',
+            },
+            weightVolume: {
+              type: 'string',
+              maxLength: 50,
+              nullable: true,
+              description: 'Weight or volume (e.g., 330ml, 1.5kg)',
+            },
+            origin: {
+              type: 'string',
+              maxLength: 50,
+              nullable: true,
+              description: 'Country of origin / manufacturing location',
+            },
+            ingredients: {
+              type: 'string',
+              maxLength: 5000,
+              nullable: true,
+              description: 'Ingredients list',
+            },
+            nutritionalInfo: {
+              type: 'string',
+              maxLength: 5000,
+              nullable: true,
+              description: 'Nutritional information',
+            },
+            usageInstructions: {
+              type: 'string',
+              maxLength: 5000,
+              nullable: true,
+              description: 'Usage instructions',
+            },
+            storageInstructions: {
+              type: 'string',
+              maxLength: 5000,
+              nullable: true,
+              description: 'Storage instructions',
+            },
+            shelfLifeDays: {
+              type: 'integer',
+              minimum: 0,
+              nullable: true,
+              description: 'Shelf life in days',
             },
             description: {
               type: 'string',
@@ -660,6 +820,14 @@ export async function GET(request: NextRequest) {
               minimum: 0,
               description: 'Stock quantity',
             },
+            images: {
+              type: 'array',
+              maxItems: 20,
+              items: {
+                $ref: '#/components/schemas/ProductImageInput',
+              },
+              description: 'Multi-image payload',
+            },
             imageUrl: {
               type: 'string',
               format: 'uri',
@@ -670,6 +838,10 @@ export async function GET(request: NextRequest) {
               type: 'string',
               nullable: true,
               description: 'Cloudinary public ID',
+            },
+            isActive: {
+              type: 'boolean',
+              description: 'Product active status',
             },
           },
         },
@@ -688,11 +860,88 @@ export async function GET(request: NextRequest) {
               maxLength: 50,
               description: 'Unique barcode',
             },
+            sku: {
+              type: 'string',
+              maxLength: 50,
+              nullable: true,
+              description: 'Internal stock keeping unit',
+            },
+            categoryId: {
+              type: 'integer',
+              minimum: 1,
+              description: 'Existing category ID',
+            },
+            categoryName: {
+              type: 'string',
+              maxLength: 100,
+              nullable: true,
+              description: 'Category name (used to auto-create if missing)',
+            },
+            brandId: {
+              type: 'integer',
+              minimum: 1,
+              nullable: true,
+              description: 'Existing brand ID',
+            },
+            brandName: {
+              type: 'string',
+              maxLength: 100,
+              nullable: true,
+              description: 'Brand name (used to auto-create if missing)',
+            },
             price: {
               type: 'number',
               exclusiveMinimum: 0,
               maximum: 1000000,
               description: 'Product price',
+            },
+            unit: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 20,
+              description: 'Selling unit (e.g., Chai, Lon, Kg)',
+            },
+            weightVolume: {
+              type: 'string',
+              maxLength: 50,
+              nullable: true,
+              description: 'Weight or volume (e.g., 330ml, 1.5kg)',
+            },
+            origin: {
+              type: 'string',
+              maxLength: 50,
+              nullable: true,
+              description: 'Country of origin / manufacturing location',
+            },
+            ingredients: {
+              type: 'string',
+              maxLength: 5000,
+              nullable: true,
+              description: 'Ingredients list',
+            },
+            nutritionalInfo: {
+              type: 'string',
+              maxLength: 5000,
+              nullable: true,
+              description: 'Nutritional information',
+            },
+            usageInstructions: {
+              type: 'string',
+              maxLength: 5000,
+              nullable: true,
+              description: 'Usage instructions',
+            },
+            storageInstructions: {
+              type: 'string',
+              maxLength: 5000,
+              nullable: true,
+              description: 'Storage instructions',
+            },
+            shelfLifeDays: {
+              type: 'integer',
+              minimum: 0,
+              nullable: true,
+              description: 'Shelf life in days',
             },
             description: {
               type: 'string',
@@ -711,6 +960,14 @@ export async function GET(request: NextRequest) {
               minimum: 0,
               description: 'Stock quantity',
             },
+            images: {
+              type: 'array',
+              maxItems: 20,
+              items: {
+                $ref: '#/components/schemas/ProductImageInput',
+              },
+              description: 'Multi-image payload (replaces existing image set)',
+            },
             imageUrl: {
               type: 'string',
               format: 'uri',
@@ -721,6 +978,58 @@ export async function GET(request: NextRequest) {
               type: 'string',
               nullable: true,
               description: 'Cloudinary public ID',
+            },
+            isActive: {
+              type: 'boolean',
+              description: 'Product active status',
+            },
+          },
+        },
+        ProductImage: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+            },
+            productId: {
+              type: 'integer',
+            },
+            imageUrl: {
+              type: 'string',
+              format: 'uri',
+            },
+            imagePublicId: {
+              type: 'string',
+            },
+            isPrimary: {
+              type: 'boolean',
+            },
+            order: {
+              type: 'integer',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+            },
+          },
+        },
+        ProductImageInput: {
+          type: 'object',
+          required: ['imageUrl', 'imagePublicId'],
+          properties: {
+            imageUrl: {
+              type: 'string',
+              format: 'uri',
+            },
+            imagePublicId: {
+              type: 'string',
+            },
+            isPrimary: {
+              type: 'boolean',
+            },
+            order: {
+              type: 'integer',
+              minimum: 0,
             },
           },
         },

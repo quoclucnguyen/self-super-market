@@ -1,0 +1,19 @@
+{
+  "batchNumber": 8,
+  "batchSize": 1,
+  "products": [
+    {
+      "barcode": "8935058911645",
+      "rawName": "XX COCKTAIL X.KHOI CP 25096",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 83.7,
+      "searchQueries": [
+        "8935058911645",
+        "8935058911645 XX COCKTAIL X.KHOI CP 25096",
+        "XX COCKTAIL X.KHOI CP 25096"
+      ],
+      "rawLine": "6918 XX COCKTAIL X.KHOI CP 25096 || 8935058911645 42900 1 42,908"
+    }
+  ]
+}

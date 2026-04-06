@@ -1,69 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { and, eq, ne } from 'drizzle-orm';
+import { ZodError } from 'zod';
+
 import { db } from '@/lib/db';
-import { products } from '@/drizzle/schema';
-import { productUpdateSchema } from '@/lib/validations/product';
-import { eq } from 'drizzle-orm';
 import { deleteImage } from '@/lib/cloudinary';
+import { categories, productImages, products } from '@/drizzle/schema';
+import { productUpdateSchema } from '@/lib/validations/product';
+import {
+  findOrCreateBrand,
+  findOrCreateCategory,
+  getDetailedProductById,
+  normalizeIncomingImages,
+} from '../helpers';
+
+function parseProductId(value: string) {
+  const id = Number.parseInt(value, 10);
+  return Number.isNaN(id) ? null : id;
+}
 
 // GET /api/products/[id] - Get product by ID
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: idParam } = await params;
-    const id = parseInt(idParam);
+    const id = parseProductId(idParam);
 
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: 'Invalid product ID' },
-        { status: 400 }
-      );
+    if (!id) {
+      return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
     }
 
-    const [product] = await db
-      .select()
-      .from(products)
-      .where(eq(products.id, id))
-      .limit(1);
-
+    const product = await getDetailedProductById(id);
     if (!product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
     return NextResponse.json(product);
   } catch (error) {
     console.error('Error fetching product:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch product' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
   }
 }
 
 // PUT /api/products/[id] - Update product
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: idParam } = await params;
-    const id = parseInt(idParam);
+    const id = parseProductId(idParam);
 
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: 'Invalid product ID' },
-        { status: 400 }
-      );
+    if (!id) {
+      return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
     }
 
     const body = await request.json();
     const validatedData = productUpdateSchema.parse(body);
 
-    // Check if product exists
     const [existing] = await db
       .select()
       .from(products)
@@ -71,98 +66,224 @@ export async function PUT(
       .limit(1);
 
     if (!existing) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Check if new barcode conflicts with another product
     if (validatedData.barcode && validatedData.barcode !== existing.barcode) {
       const [conflict] = await db
-        .select()
+        .select({ id: products.id })
         .from(products)
-        .where(eq(products.barcode, validatedData.barcode))
+        .where(and(eq(products.barcode, validatedData.barcode), ne(products.id, id)))
         .limit(1);
 
-      if (conflict && conflict.id !== id) {
+      if (conflict) {
         return NextResponse.json(
           { error: 'Product with this barcode already exists' },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
-    // Delete old image if replacing
-    if (validatedData.imageUrl && existing.imagePublicId &&
-        validatedData.imagePublicId !== existing.imagePublicId) {
-      await deleteImage(existing.imagePublicId);
+    if (validatedData.sku) {
+      const [conflictSku] = await db
+        .select({ id: products.id })
+        .from(products)
+        .where(and(eq(products.sku, validatedData.sku), ne(products.id, id)))
+        .limit(1);
+
+      if (conflictSku) {
+        return NextResponse.json({ error: 'Product with this SKU already exists' }, { status: 400 });
+      }
     }
 
-    // Update product
-    const updateData: Partial<{
-      name: string;
-      barcode: string;
-      price: string;
-      description: string | null;
-      category: string | null;
-      stockQuantity: number;
-      imageUrl: string | null;
-      imagePublicId: string | null;
-      updatedAt: Date;
-    }> = {
-      ...(validatedData.name && { name: validatedData.name }),
-      ...(validatedData.barcode && { barcode: validatedData.barcode }),
-      ...(validatedData.price !== undefined && { price: validatedData.price.toString() }),
-      ...(validatedData.description !== undefined && { description: validatedData.description }),
-      ...(validatedData.category !== undefined && { category: validatedData.category }),
-      ...(validatedData.stockQuantity !== undefined && { stockQuantity: validatedData.stockQuantity }),
-      ...(validatedData.imageUrl !== undefined && { imageUrl: validatedData.imageUrl }),
-      ...(validatedData.imagePublicId !== undefined && { imagePublicId: validatedData.imagePublicId }),
-      updatedAt: new Date(),
-    };
+    const categoryText = validatedData.categoryName ?? validatedData.category;
+    const brandText = validatedData.brandName;
 
-    const [updated] = await db
-      .update(products)
-      .set(updateData)
-      .where(eq(products.id, id))
-      .returning();
+    const hasIncomingImages =
+      validatedData.images !== undefined ||
+      validatedData.imageUrl !== undefined ||
+      validatedData.imagePublicId !== undefined;
 
+    const normalizedImages = normalizeIncomingImages(
+      validatedData.images,
+      validatedData.imageUrl,
+      validatedData.imagePublicId,
+    );
+
+    const existingImageRows = hasIncomingImages
+      ? await db
+          .select()
+          .from(productImages)
+          .where(eq(productImages.productId, id))
+      : [];
+
+    const oldPublicIds = new Set(
+      [...existingImageRows.map((image) => image.imagePublicId), existing.imagePublicId]
+        .filter((value): value is string => Boolean(value)),
+    );
+
+    const newPublicIds = new Set(normalizedImages.map((image) => image.imagePublicId));
+    const imagesToDelete = hasIncomingImages
+      ? [...oldPublicIds].filter((publicId) => !newPublicIds.has(publicId))
+      : [];
+
+    await db.transaction(async (tx) => {
+      let resolvedCategoryId = validatedData.categoryId ?? existing.categoryId;
+      let resolvedCategoryName = categoryText ?? existing.category;
+
+      if (!resolvedCategoryId) {
+        throw new Error('CATEGORY_REQUIRED');
+      }
+
+      if ((validatedData.categoryId !== undefined || categoryText !== undefined) && categoryText) {
+        const categoryRecord = await findOrCreateCategory(tx, categoryText);
+        if (categoryRecord) {
+          resolvedCategoryId = categoryRecord.id;
+          resolvedCategoryName = categoryRecord.name;
+        }
+      } else {
+        const [categoryRecord] = await tx
+          .select({ name: categories.name })
+          .from(categories)
+          .where(eq(categories.id, resolvedCategoryId))
+          .limit(1);
+
+        if (!categoryRecord) {
+          throw new Error('CATEGORY_INVALID');
+        }
+
+        resolvedCategoryName = categoryRecord.name;
+      }
+
+      let resolvedBrandId = validatedData.brandId ?? existing.brandId;
+      if ((validatedData.brandId !== undefined || brandText !== undefined) && brandText) {
+        const brandRecord = await findOrCreateBrand(tx, brandText);
+        if (brandRecord) {
+          resolvedBrandId = brandRecord.id;
+        }
+      }
+
+      const updatePayload = {
+        ...(validatedData.name !== undefined && { name: validatedData.name }),
+        ...(validatedData.barcode !== undefined && { barcode: validatedData.barcode }),
+        ...(validatedData.sku !== undefined && { sku: validatedData.sku ?? null }),
+        ...(validatedData.price !== undefined && { price: validatedData.price.toString() }),
+        ...(validatedData.unit !== undefined && { unit: validatedData.unit }),
+        ...(validatedData.weightVolume !== undefined && {
+          weightVolume: validatedData.weightVolume ?? null,
+        }),
+        ...(validatedData.origin !== undefined && { origin: validatedData.origin ?? null }),
+        ...(validatedData.ingredients !== undefined && {
+          ingredients: validatedData.ingredients ?? null,
+        }),
+        ...(validatedData.nutritionalInfo !== undefined && {
+          nutritionalInfo: validatedData.nutritionalInfo ?? null,
+        }),
+        ...(validatedData.usageInstructions !== undefined && {
+          usageInstructions: validatedData.usageInstructions ?? null,
+        }),
+        ...(validatedData.storageInstructions !== undefined && {
+          storageInstructions: validatedData.storageInstructions ?? null,
+        }),
+        ...(validatedData.shelfLifeDays !== undefined && {
+          shelfLifeDays: validatedData.shelfLifeDays ?? null,
+        }),
+        ...(validatedData.description !== undefined && {
+          description: validatedData.description ?? null,
+        }),
+        ...(validatedData.stockQuantity !== undefined && {
+          stockQuantity: validatedData.stockQuantity,
+        }),
+        ...(validatedData.isActive !== undefined && { isActive: validatedData.isActive }),
+        ...(validatedData.categoryId !== undefined || categoryText !== undefined
+          ? {
+              categoryId: resolvedCategoryId,
+              category: resolvedCategoryName,
+            }
+          : {}),
+        ...(validatedData.brandId !== undefined || brandText !== undefined
+          ? {
+              brandId: resolvedBrandId,
+            }
+          : {}),
+        ...(hasIncomingImages
+          ? {
+              imageUrl: normalizedImages.find((image) => image.isPrimary)?.imageUrl ?? normalizedImages[0]?.imageUrl ?? null,
+              imagePublicId:
+                normalizedImages.find((image) => image.isPrimary)?.imagePublicId ??
+                normalizedImages[0]?.imagePublicId ??
+                null,
+            }
+          : {}),
+        updatedAt: new Date(),
+      };
+
+      await tx.update(products).set(updatePayload).where(eq(products.id, id));
+
+      if (hasIncomingImages) {
+        await tx.delete(productImages).where(eq(productImages.productId, id));
+
+        if (normalizedImages.length > 0) {
+          await tx.insert(productImages).values(
+            normalizedImages.map((image, index) => ({
+              productId: id,
+              imageUrl: image.imageUrl,
+              imagePublicId: image.imagePublicId,
+              isPrimary: image.isPrimary ?? index === 0,
+              order: index,
+            })),
+          );
+        }
+      }
+    });
+
+    if (imagesToDelete.length > 0) {
+      await Promise.allSettled(imagesToDelete.map((publicId) => deleteImage(publicId)));
+    }
+
+    const updated = await getDetailedProductById(id);
     return NextResponse.json(updated);
   } catch (error) {
     console.error('Error updating product:', error);
 
-    if (error instanceof Error && error.name === 'ZodError') {
+    if (error instanceof ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error },
-        { status: 400 }
+        { error: 'Invalid input data', details: error.flatten() },
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      { error: 'Failed to update product' },
-      { status: 500 }
-    );
+    if (error instanceof Error && error.message === 'CATEGORY_REQUIRED') {
+      return NextResponse.json(
+        { error: 'Category is required. Please provide categoryId or categoryName.' },
+        { status: 400 },
+      );
+    }
+
+    if (error instanceof Error && error.message === 'CATEGORY_INVALID') {
+      return NextResponse.json(
+        { error: 'Category does not exist. Please provide a valid category.' },
+        { status: 400 },
+      );
+    }
+
+    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
   }
 }
 
 // DELETE /api/products/[id] - Delete product
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: idParam } = await params;
-    const id = parseInt(idParam);
+    const id = parseProductId(idParam);
 
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: 'Invalid product ID' },
-        { status: 400 }
-      );
+    if (!id) {
+      return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
     }
 
-    // Get product to delete its image
     const [existing] = await db
       .select()
       .from(products)
@@ -170,31 +291,28 @@ export async function DELETE(
       .limit(1);
 
     if (!existing) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Delete image from Cloudinary
-    if (existing.imagePublicId) {
-      try {
-        await deleteImage(existing.imagePublicId);
-      } catch (error) {
-        console.error('Error deleting image from Cloudinary:', error);
-        // Continue with product deletion even if image deletion fails
-      }
-    }
+    const existingImageRows = await db
+      .select({ imagePublicId: productImages.imagePublicId })
+      .from(productImages)
+      .where(eq(productImages.productId, id));
 
-    // Delete product from database
     await db.delete(products).where(eq(products.id, id));
+
+    const imagePublicIds = new Set(
+      [...existingImageRows.map((row) => row.imagePublicId), existing.imagePublicId]
+        .filter((value): value is string => Boolean(value)),
+    );
+
+    if (imagePublicIds.size > 0) {
+      await Promise.allSettled([...imagePublicIds].map((publicId) => deleteImage(publicId)));
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting product:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete product' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
   }
 }

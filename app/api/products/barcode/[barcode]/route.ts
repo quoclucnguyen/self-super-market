@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { products } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { getDetailedProductByBarcode } from '../../helpers';
 
 // GET /api/products/barcode/[barcode] - Lookup product by barcode
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ barcode: string }> }
 ) {
   try {
@@ -18,11 +16,7 @@ export async function GET(
       );
     }
 
-    const [product] = await db
-      .select()
-      .from(products)
-      .where(eq(products.barcode, barcode))
-      .limit(1);
+    const product = await getDetailedProductByBarcode(barcode);
 
     if (!product) {
       return NextResponse.json(

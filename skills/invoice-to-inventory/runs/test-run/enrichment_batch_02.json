@@ -1,0 +1,110 @@
+{
+  "batchNumber": 2,
+  "batchSize": 8,
+  "products": [
+    {
+      "barcode": "8936109182007",
+      "rawName": "BOT GIA VI HOAN CHINH CA KHO NGHE 506",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 89.5,
+      "searchQueries": [
+        "8936109182007",
+        "8936109182007 BOT GIA VI HOAN CHINH CA KHO NGHE 506",
+        "BOT GIA VI HOAN CHINH CA KHO NGHE 506"
+      ],
+      "rawLine": "924 BOT GVHC CA KHO NGHE 506 || 8936109182007 7599 1 7,599"
+    },
+    {
+      "barcode": "8936109181994",
+      "rawName": "BOT GIA VI HOAN CHINH CA KHO TO 60G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 88.1,
+      "searchQueries": [
+        "8936109181994",
+        "8936109181994 BOT GIA VI HOAN CHINH CA KHO TO 60G",
+        "BOT GIA VI HOAN CHINH CA KHO TO 60G"
+      ],
+      "rawLine": "929 BOT GVHC CA KHO TO 60G || 8936109181994 14909 1 14,908"
+    },
+    {
+      "barcode": "8934563973155",
+      "rawName": "BUN GIO HEO HANG NGA 75G",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 83.5,
+      "searchQueries": [
+        "8934563973155",
+        "8934563973155 BUN GIO HEO HANG NGA 75G",
+        "BUN GIO HEO HANG NGA 75G"
+      ],
+      "rawLine": "@45 BUN GIO HEO HANG NGA 75G || 8934563973155 89099 1 8,900"
+    },
+    {
+      "barcode": "2292949999905",
+      "rawName": "CA CHUA BEEF",
+      "itemType": "weighted",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 84.8,
+      "searchQueries": [
+        "2292949999905",
+        "2292949999905 CA CHUA BEEF",
+        "CA CHUA BEEF"
+      ],
+      "rawLine": "619 CA CHUA BEEF || 2292949999905 48900 0.850 41,565"
+    },
+    {
+      "barcode": "2292076000006",
+      "rawName": "CA ROT",
+      "itemType": "weighted",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 74.0,
+      "searchQueries": [
+        "2292076000006",
+        "2292076000006 CA ROT",
+        "CA ROT"
+      ],
+      "rawLine": "895 CA ROT || 2292076000006 49908 1.010 58,399"
+    },
+    {
+      "barcode": "8934717421525",
+      "rawName": "CA VIEN NGON CAU TRE 59096",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 83.5,
+      "searchQueries": [
+        "8934717421525",
+        "8934717421525 CA VIEN NGON CAU TRE 59096",
+        "CA VIEN NGON CAU TRE 59096"
+      ],
+      "rawLine": "611 CA VIEN NGON CAU TRE 59096 || 8934717421525 39900 1 39,900"
+    },
+    {
+      "barcode": "8936059812232",
+      "rawName": "CL-GTAY CHONG DINH 58T 30X22",
+      "itemType": "packaged",
+      "ocrConfidence": "high",
+      "ocrConfidenceScore": 87.0,
+      "searchQueries": [
+        "8936059812232",
+        "8936059812232 CL-GTAY CHONG DINH 58T 30X22",
+        "CL-GTAY CHONG DINH 58T 30X22"
+      ],
+      "rawLine": "0854 CL-GTAY CHONG DINH 58T 30X22 || 8936059812232 54900 1 54,908"
+    },
+    {
+      "barcode": "8935297102873",
+      "rawName": "COM CHIEN GA CHAY TOI CJ2196",
+      "itemType": "packaged",
+      "ocrConfidence": "medium",
+      "ocrConfidenceScore": 80.8,
+      "searchQueries": [
+        "8935297102873",
+        "8935297102873 COM CHIEN GA CHAY TOI CJ2196",
+        "COM CHIEN GA CHAY TOI CJ2196"
+      ],
+      "rawLine": "@14 COM CHIEN GA CHAY TOI CJ2196 || 8935297102873 18908 1 18,908"
+    }
+  ]
+}
