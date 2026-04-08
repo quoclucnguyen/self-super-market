@@ -79,38 +79,68 @@ Use this flow when the user wants the receipt to become a **product knowledge so
 
 3. **Web enrichment**
    - Search by barcode first.
-   - If needed, search by `barcode + rawName`.
-   - If still needed, search by `rawName`.
+   - If needed, search by `barcode + cleanedName`.
+   - If still needed, search by `cleanedName`.
    - Prefer official brand pages, then major retailers, then trusted barcode/product databases.
+   - Skip likely supermarket internal weighted-produce codes early instead of wasting internet lookups.
+   - Write checkpoints every few items so long jobs always leave usable partial output.
 
-4. **Sub-agent batching**
-   - For medium/large receipts, spawn sub-agents in batches (recommended 5-10 products per batch).
-   - Each sub-agent should return normalized structured product metadata.
+4. **Batching / execution strategy**
+   - Always create enrichment batches for auditability and optional parallelization.
+   - Default execution should still continue automatically in-process unless the user asked to pause.
+   - Use sub-agents only when the receipt is very large or the local enrichment strategy is clearly insufficient.
    - Do not spawn one sub-agent per product unless the total list is very small.
 
-5. **Merge enriched results**
-   - Combine all batch outputs.
+5. **Checkpoint + job status reporting**
+   - For any run longer than about 1-2 minutes, emit progress updates at stage boundaries and every checkpoint batch.
+   - Maintain `job_status.json` with at least:
+     - `jobId`
+     - `state` (`running | completed | failed`)
+     - `stage`
+     - `progress`
+     - `summary`
+     - `artifacts`
+     - recent `events`
+   - Never go silent during a long run if there is fresh progress to report.
+   - Partial outputs must be usable even if the process is interrupted.
+
+6. **Merge enriched results**
+   - Combine all enrichment results.
    - Resolve conflicts by source quality and confidence.
    - Keep `sourceUrls` for audit.
 
-6. **Preview for confirmation**
+7. **Preview for confirmation**
    - Show grouped results:
      - confident catalog-ready items
      - ambiguous items
      - failed lookups
 
-7. **Import into product system**
+8. **Import into product system**
    - Create/update product records using enriched identity data.
    - In this mode, `stockQuantity` and receipt `lineTotal` do not need to block import.
 
 Recommended one-shot command for this flow:
 - `python3 scripts/run_catalog_flow.py <receipt-image> --out-dir runs/<run-name> --batch-size 8`
 
+Default behavior should be fully automatic for catalog enrichment:
+1. run OCR
+2. build unique barcode candidates
+3. write enrichment batches for audit/review
+4. run local web enrichment automatically
+5. write checkpointed partial results during long runs
+6. maintain a persistent `job_status.json` with stage, state, progress, artifacts, summary, and recent events
+7. finish with a machine-readable summary grouped into `ready`, `ambiguous`, `failed`, and `skippedInternalWeighted`
+
 This command should produce at least:
 - `runs/<run-name>/receipt_ocr_output.json`
 - `runs/<run-name>/receipt_catalog_candidates.json`
 - `runs/<run-name>/enrichment_batch_XX.json`
+- `runs/<run-name>/enrichment_results.json`
 - `runs/<run-name>/catalog_flow_manifest.json`
+- `runs/<run-name>/job_status.json`
+
+If the user explicitly wants only OCR/candidates, use:
+- `python3 scripts/run_catalog_flow.py <receipt-image> --out-dir runs/<run-name> --skip-enrichment`
 
 ### 1) Extract structured fields from image (vision/OCR)
 
@@ -168,8 +198,9 @@ Per item, try to infer or verify:
 
 Search order:
 1. exact barcode
-2. barcode + raw name
-3. raw name only
+2. barcode + cleaned name
+3. retailer-scoped barcode query (for example `site:lottemart.vn <barcode>`)
+4. cleaned name only
 
 Recommended source preference:
 1. official brand/manufacturer pages
@@ -181,7 +212,9 @@ Rules:
 - Keep source-backed values only.
 - If multiple identities conflict, mark as ambiguous and ask user to choose.
 - If barcode cannot be confidently verified, keep OCR barcode but lower confidence.
-- For internet-heavy batches, use sub-agents in batches (for example 5-10 products per agent), not one agent per product unless the list is tiny.
+- Skip weighted/internal produce codes early when they are unlikely to map to real retail product pages.
+- Always checkpoint partial enrichment output during internet-heavy runs.
+- For internet-heavy batches, use sub-agents only when local enrichment is clearly insufficient or the list is too large.
 
 ### 3) Map to API payload (`ProductCreate` shape)
 
@@ -324,5 +357,27 @@ For catalog enrichment mode, return:
 - enriched success count
 - ambiguous count
 - failed lookup count
+- skipped internal weighted count
 - items ready to import
 - items needing manual confirmation
+
+## Automation notes
+
+Preferred automatic command:
+- `python3 scripts/run_catalog_flow.py <receipt-image> --out-dir runs/<run-name> --batch-size 8`
+
+Support scripts:
+- `scripts/enrich_catalog_candidates.py <receipt_catalog_candidates.json> --out <output.json>`
+- `scripts/launch_catalog_flow_background.py <receipt-image> [--run-name <name>]`
+- `scripts/watch_catalog_job_notify.py <job_status.json> --target <telegram-chat-id>`
+
+Behavior requirements:
+- do not stop after OCR unless explicitly asked
+- write progress lines to stdout so a caller can relay updates
+- maintain `job_status.json` so external watchers can notify the user without asking for status manually
+- write partial checkpoints during enrichment
+- survive partial network failures by keeping completed results
+- leave a final `enrichment_results.json` with `summary` + `results`
+- prefer running long jobs in background and notify the user from stage changes/checkpoints rather than waiting for them to ask
+- for detached execution, use `scripts/launch_catalog_flow_background.py` so the caller gets `jobId`, `statusOutput`, `logOutput`, and `outDir` immediately
+- pair background runs with `scripts/watch_catalog_job_notify.py` so stage/progress/completion updates are pushed back to Telegram automatically

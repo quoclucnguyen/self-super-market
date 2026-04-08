@@ -32,15 +32,19 @@ def choose_best(items):
 
 
 def build_candidate(item):
+    barcode = item.get('barcode')
     return {
-        'barcode': item.get('barcode'),
+        'barcode': barcode,
         'rawName': item.get('rawName'),
         'itemType': item.get('itemType'),
         'ocrConfidence': item.get('ocrConfidence'),
         'ocrConfidenceScore': item.get('ocrConfidenceScore'),
+        'quantity': item.get('quantity'),
+        'unitPrice': item.get('unitPrice'),
+        'lineTotal': item.get('lineTotal'),
         'searchQueries': [
-            item.get('barcode'),
-            f"{item.get('barcode')} {item.get('rawName')}",
+            barcode,
+            f"{barcode} {item.get('rawName')}",
             item.get('rawName'),
         ],
         'rawLine': item.get('rawLine'),

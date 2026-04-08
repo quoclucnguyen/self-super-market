@@ -5,16 +5,33 @@ import subprocess
 import sys
 from pathlib import Path
 
+from catalog_job_status import append_event, update_status
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 OCR_SCRIPT = SCRIPT_DIR / 'receipt_ocr.py'
 CANDIDATE_SCRIPT = SCRIPT_DIR / 'receipt_catalog_candidates.py'
+ENRICH_SCRIPT = SCRIPT_DIR / 'enrich_catalog_candidates.py'
 
 
 def run_python(script: Path, *args: str) -> str:
     cmd = [sys.executable, str(script), *args]
     result = subprocess.run(cmd, check=True, capture_output=True, text=True)
     return result.stdout
+
+
+def run_python_stream(script: Path, *args: str):
+    cmd = [sys.executable, str(script), *args]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    captured = []
+    assert proc.stdout is not None
+    for line in proc.stdout:
+        print(line.rstrip(), flush=True)
+        captured.append(line)
+    rc = proc.wait()
+    if rc != 0:
+        raise subprocess.CalledProcessError(rc, cmd, output=''.join(captured))
+    return ''.join(captured)
 
 
 def write_text(path: Path, content: str):
@@ -28,26 +45,66 @@ def chunked(items, size):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Run receipt -> OCR -> catalog-candidate flow')
+    parser = argparse.ArgumentParser(description='Run receipt -> OCR -> candidate -> enrichment flow')
     parser.add_argument('image', help='Path to receipt image')
     parser.add_argument('--out-dir', default=str(SCRIPT_DIR.parent / 'runs' / 'latest'), help='Output directory')
-    parser.add_argument('--batch-size', type=int, default=8, help='Suggested batch size for web enrichment sub-agents')
+    parser.add_argument('--batch-size', type=int, default=8, help='Suggested batch size for review or sub-agents')
+    parser.add_argument('--skip-enrichment', action='store_true', help='Only run OCR + candidate extraction')
+    parser.add_argument('--checkpoint-every', type=int, default=8, help='Write enrichment checkpoint every N candidates')
+    parser.add_argument('--pause', type=float, default=0.6, help='Pause between web queries in seconds')
+    parser.add_argument('--job-id', help='Stable job id for background tracking')
     args = parser.parse_args()
 
     image_path = Path(args.image).resolve()
     out_dir = Path(args.out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    status_path = out_dir / 'job_status.json'
+    job_id = args.job_id or out_dir.name
+    update_status(
+        status_path,
+        jobId=job_id,
+        state='running',
+        stage='initializing',
+        image=str(image_path),
+        outDir=str(out_dir),
+        artifacts={},
+        progress={'processed': 0, 'total': 0},
+    )
+    append_event(status_path, 'job', 'Catalog flow started', {'jobId': job_id})
+
+    print('stage ocr:start', flush=True)
+    update_status(status_path, stage='ocr', state='running')
+    append_event(status_path, 'stage', 'OCR started')
     ocr_json = run_python(OCR_SCRIPT, str(image_path))
     ocr_path = out_dir / 'receipt_ocr_output.json'
     write_text(ocr_path, ocr_json)
+    print('stage ocr:done', flush=True)
+    update_status(status_path, stage='ocr', state='running', artifacts={'ocrOutput': str(ocr_path)})
+    append_event(status_path, 'stage', 'OCR completed', {'ocrOutput': str(ocr_path)})
 
+    print('stage candidates:start', flush=True)
+    update_status(status_path, stage='candidates', state='running', artifacts={'ocrOutput': str(ocr_path)})
+    append_event(status_path, 'stage', 'Candidate extraction started')
     candidates_json = run_python(CANDIDATE_SCRIPT, str(ocr_path))
     candidates_path = out_dir / 'receipt_catalog_candidates.json'
     write_text(candidates_path, candidates_json)
+    print('stage candidates:done', flush=True)
 
     candidates = json.loads(candidates_json)
     product_candidates = candidates.get('productCandidates', [])
+    update_status(
+        status_path,
+        stage='candidates',
+        state='running',
+        progress={'processed': 0, 'total': len(product_candidates)},
+        summary=candidates.get('summary', {}),
+        artifacts={
+            'ocrOutput': str(ocr_path),
+            'candidateOutput': str(candidates_path),
+        },
+    )
+    append_event(status_path, 'stage', 'Candidate extraction completed', candidates.get('summary', {}))
 
     batches = []
     for idx, batch in enumerate(chunked(product_candidates, args.batch_size), start=1):
@@ -72,10 +129,58 @@ def main():
         'summary': candidates.get('summary', {}),
         'batchSize': args.batch_size,
         'batches': batches,
-        'nextStep': 'Spawn sub-agents using each enrichment_batch_XX.json file for web lookup and metadata normalization.',
+        'statusOutput': str(status_path),
+        'nextStep': 'Run local enrichment with checkpoints unless skipped.',
     }
     manifest_path = out_dir / 'catalog_flow_manifest.json'
     write_text(manifest_path, json.dumps(manifest, ensure_ascii=False, indent=2))
+    update_status(status_path, artifacts={
+        'ocrOutput': str(ocr_path),
+        'candidateOutput': str(candidates_path),
+        'manifestOutput': str(manifest_path),
+    })
+
+    if not args.skip_enrichment:
+        print('stage enrichment:start', flush=True)
+        enrichment_path = out_dir / 'enrichment_results.json'
+        update_status(status_path, stage='enrichment', state='running', artifacts={
+            'ocrOutput': str(ocr_path),
+            'candidateOutput': str(candidates_path),
+            'manifestOutput': str(manifest_path),
+            'enrichmentOutput': str(enrichment_path),
+        })
+        append_event(status_path, 'stage', 'Enrichment started')
+        run_python_stream(
+            ENRICH_SCRIPT,
+            str(candidates_path),
+            '--out', str(enrichment_path),
+            '--status', str(status_path),
+            '--checkpoint-every', str(args.checkpoint_every),
+            '--pause', str(args.pause),
+        )
+        print('stage enrichment:done', flush=True)
+        manifest['enrichmentOutput'] = str(enrichment_path)
+        if enrichment_path.exists():
+            enrichment = json.loads(enrichment_path.read_text(encoding='utf-8'))
+            manifest['enrichmentSummary'] = enrichment.get('summary', {})
+            write_text(manifest_path, json.dumps(manifest, ensure_ascii=False, indent=2))
+            update_status(
+                status_path,
+                state='completed',
+                stage='completed',
+                progress=enrichment.get('progress', {'processed': len(product_candidates), 'total': len(product_candidates)}),
+                summary=enrichment.get('summary', {}),
+                artifacts={
+                    'ocrOutput': str(ocr_path),
+                    'candidateOutput': str(candidates_path),
+                    'manifestOutput': str(manifest_path),
+                    'enrichmentOutput': str(enrichment_path),
+                },
+            )
+            append_event(status_path, 'job', 'Catalog flow completed', enrichment.get('summary', {}))
+    else:
+        update_status(status_path, state='completed', stage='completed')
+        append_event(status_path, 'job', 'Catalog flow completed without enrichment')
 
     print(json.dumps(manifest, ensure_ascii=False, indent=2))
 
