@@ -7,7 +7,9 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, quote_plus, unquote, urlparse
+from urllib.request import Request, urlopen
 
 from catalog_job_status import append_event, update_status
 
@@ -23,6 +25,14 @@ PREFERRED_DOMAINS = [
     'barona.vn',
     'cautre.com.vn',
     'takyfood.com',
+    'world.openfoodfacts.org',
+    'openfoodfacts.org',
+    'upcitemdb.com',
+]
+
+API_SOURCES = [
+    'openfoodfacts',
+    'upcitemdb',
 ]
 
 NAME_FIXES = {
@@ -66,6 +76,12 @@ def curl(url: str, timeout_s: float = 12.0) -> str:
         timeout=max(int(timeout_s) + 2, 8),
         stderr=subprocess.DEVNULL,
     )
+
+
+def fetch_json(url: str, timeout_s: float = 8.0):
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    with urlopen(req, timeout=timeout_s) as resp:
+        return json.loads(resp.read().decode('utf-8', errors='replace'))
 
 
 def ddg_search(query: str, limit: int = 8, timeout_s: float = 12.0):
@@ -131,6 +147,102 @@ def score_result(barcode: str, clean: str, result: dict) -> int:
     return score
 
 
+def choose_confidence(score: int) -> str:
+    if score >= 8:
+        return 'high'
+    if score >= 4:
+        return 'medium'
+    return 'low'
+
+
+def enrich_from_openfoodfacts(barcode: str, raw_name: str, clean: str, timeout_s: float):
+    url = f'https://world.openfoodfacts.org/api/v0/product/{barcode}.json'
+    payload = fetch_json(url, timeout_s=timeout_s)
+    if payload.get('status') != 1:
+        return None
+    product = payload.get('product') or {}
+    name = product.get('product_name_vi') or product.get('product_name') or clean
+    brand = product.get('brands')
+    category = product.get('categories')
+    image = product.get('image_front_url') or product.get('image_url')
+    source_url = product.get('url') or f'https://world.openfoodfacts.org/product/{barcode}'
+    score = 6
+    if name and any(tok in name.upper() for tok in tokenize(clean)[:3]):
+        score += 2
+    if brand:
+        score += 1
+    return {
+        'barcode': barcode,
+        'rawName': raw_name,
+        'cleanName': clean,
+        'status': 'api_match',
+        'normalizedName': name,
+        'brand': brand,
+        'category': category,
+        'description': product.get('generic_name_vi') or product.get('generic_name'),
+        'imageUrl': image,
+        'packageSize': product.get('quantity'),
+        'matchConfidence': choose_confidence(score),
+        'source': 'openfoodfacts',
+        'sourceUrls': [source_url],
+        'searchResults': [{'title': name, 'url': source_url}],
+    }
+
+
+def enrich_from_upcitemdb(barcode: str, raw_name: str, clean: str, timeout_s: float):
+    url = f'https://api.upcitemdb.com/prod/trial/lookup?upc={barcode}'
+    payload = fetch_json(url, timeout_s=timeout_s)
+    items = payload.get('items') or []
+    if not items:
+        return None
+    item = items[0]
+    name = item.get('title') or clean
+    category = item.get('category')
+    brand = item.get('brand')
+    image = (item.get('images') or [None])[0]
+    offers = item.get('offers') or []
+    source_url = (offers[0].get('link') if offers else None) or f'https://www.upcitemdb.com/upc/{barcode}'
+    score = 5
+    if name and any(tok in name.upper() for tok in tokenize(clean)[:3]):
+        score += 2
+    if brand:
+        score += 1
+    return {
+        'barcode': barcode,
+        'rawName': raw_name,
+        'cleanName': clean,
+        'status': 'api_match',
+        'normalizedName': name,
+        'brand': brand,
+        'category': category,
+        'description': item.get('description'),
+        'imageUrl': image,
+        'packageSize': item.get('size'),
+        'matchConfidence': choose_confidence(score),
+        'source': 'upcitemdb',
+        'sourceUrls': [source_url],
+        'searchResults': [{'title': name, 'url': source_url}],
+    }
+
+
+def enrich_via_apis(barcode: str, raw_name: str, clean: str, timeout_s: float, api_errors: list[str]):
+    for source in API_SOURCES:
+        try:
+            if source == 'openfoodfacts':
+                result = enrich_from_openfoodfacts(barcode, raw_name, clean, timeout_s)
+            elif source == 'upcitemdb':
+                result = enrich_from_upcitemdb(barcode, raw_name, clean, timeout_s)
+            else:
+                result = None
+            if result:
+                return result
+        except (HTTPError, URLError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+            api_errors.append(f'{source}: {exc}')
+        except Exception as exc:
+            api_errors.append(f'{source}: {exc}')
+    return None
+
+
 def enrich_candidate(candidate: dict, pause_s: float, timeout_s: float, retries: int):
     barcode = str(candidate.get('barcode') or '')
     raw_name = candidate.get('rawName') or ''
@@ -158,8 +270,14 @@ def enrich_candidate(candidate: dict, pause_s: float, timeout_s: float, retries:
             'notes': 'Barcode looks internal, malformed, or unreliable for catalog enrichment.',
         }
 
-    queries = [barcode, f'{barcode} {clean}']
+    api_errors = []
+    api_result = enrich_via_apis(barcode, raw_name, clean, min(timeout_s, 8.0), api_errors)
+    if api_result:
+        if api_errors:
+            api_result['apiErrors'] = api_errors
+        return api_result
 
+    queries = [barcode, f'{barcode} {clean}', clean]
     merged = []
     seen = set()
     search_errors = []
@@ -187,13 +305,7 @@ def enrich_candidate(candidate: dict, pause_s: float, timeout_s: float, retries:
     top = [item for _, item in scored[:5]]
     best_score = scored[0][0] if scored else 0
     best = top[0] if top else None
-
-    if best_score >= 8:
-        confidence = 'high'
-    elif best_score >= 4:
-        confidence = 'medium'
-    else:
-        confidence = 'low'
+    confidence = choose_confidence(best_score)
 
     normalized_name = best.get('title') if best and best.get('title') else clean
     out = {
@@ -203,9 +315,12 @@ def enrich_candidate(candidate: dict, pause_s: float, timeout_s: float, retries:
         'status': 'searched_v2',
         'normalizedName': normalized_name,
         'matchConfidence': confidence,
+        'source': 'duckduckgo_fallback',
         'sourceUrls': [item['url'] for item in top if item.get('url')],
         'searchResults': top,
     }
+    if api_errors:
+        out['apiErrors'] = api_errors
     if search_errors:
         out['searchErrors'] = search_errors
     return out

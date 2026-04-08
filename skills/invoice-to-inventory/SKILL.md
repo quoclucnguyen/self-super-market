@@ -197,16 +197,17 @@ Per item, try to infer or verify:
 - `matchConfidence`
 
 Search order:
-1. exact barcode
-2. barcode + cleaned name
+1. exact barcode via barcode/product APIs
+2. barcode + cleaned name via barcode/product APIs or retailer/product sources
 3. retailer-scoped barcode query (for example `site:lottemart.vn <barcode>`)
 4. cleaned name only
 
 Recommended source preference:
-1. official brand/manufacturer pages
-2. major retailer/product listing pages
-3. trusted barcode/product databases
-4. other sources only as fallback
+1. barcode/product APIs (for example Open Food Facts, UPCitemdb, Barcode Lookup when available)
+2. official brand/manufacturer pages
+3. major retailer/product listing pages
+4. trusted barcode/product databases
+5. other sources only as fallback
 
 Rules:
 - Keep source-backed values only.
@@ -370,6 +371,7 @@ Support scripts:
 - `scripts/enrich_catalog_candidates.py <receipt_catalog_candidates.json> --out <output.json>`
 - `scripts/launch_catalog_flow_background.py <receipt-image> [--run-name <name>]`
 - `scripts/watch_catalog_job_notify.py <job_status.json> --target <telegram-chat-id>`
+- `scripts/launch_catalog_flow_with_notify.py <receipt-image> --target <telegram-chat-id> [--reply-to <message-id>]`
 
 Behavior requirements:
 - do not stop after OCR unless explicitly asked
@@ -380,4 +382,5 @@ Behavior requirements:
 - leave a final `enrichment_results.json` with `summary` + `results`
 - prefer running long jobs in background and notify the user from stage changes/checkpoints rather than waiting for them to ask
 - for detached execution, use `scripts/launch_catalog_flow_background.py` so the caller gets `jobId`, `statusOutput`, `logOutput`, and `outDir` immediately
-- pair background runs with `scripts/watch_catalog_job_notify.py` so stage/progress/completion updates are pushed back to Telegram automatically
+- pair background runs with `scripts/watch_catalog_job_notify.py` so stage/progress/completion updates are pushed back automatically
+- when sending from a chat workflow, prefer `scripts/launch_catalog_flow_with_notify.py` so the job launcher also starts the watcher with the correct channel/target/reply-to metadata
