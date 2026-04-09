@@ -12,6 +12,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 OCR_SCRIPT = SCRIPT_DIR / 'receipt_ocr.py'
 CANDIDATE_SCRIPT = SCRIPT_DIR / 'receipt_catalog_candidates.py'
 ENRICH_SCRIPT = SCRIPT_DIR / 'enrich_catalog_candidates.py'
+IMPORT_SCRIPT = SCRIPT_DIR / 'import_inventory.py'
 
 
 def run_python(script: Path, *args: str) -> str:
@@ -53,6 +54,12 @@ def main():
     parser.add_argument('--checkpoint-every', type=int, default=8, help='Write enrichment checkpoint every N candidates')
     parser.add_argument('--pause', type=float, default=0.6, help='Pause between web queries in seconds')
     parser.add_argument('--job-id', help='Stable job id for background tracking')
+    parser.add_argument('--auto-import', dest='auto_import', action='store_true', default=True, help='Automatically import eligible enriched items into inventory after enrichment (default: enabled)')
+    parser.add_argument('--no-auto-import', dest='auto_import', action='store_false', help='Stop after enrichment and do not call the inventory API')
+    parser.add_argument('--import-min-confidence', default='medium', choices=['high', 'medium', 'low'], help='Minimum enrichment confidence required for auto-import')
+    parser.add_argument('--import-mode', default='catalog', choices=['catalog', 'stock'], help='Inventory import behavior: catalog keeps default stock, stock adds OCR quantity')
+    parser.add_argument('--import-default-stock', type=int, default=1, help='Default stockQuantity for catalog import mode')
+    parser.add_argument('--import-dry-run', action='store_true', help='Prepare import payloads without calling the inventory API')
     args = parser.parse_args()
 
     image_path = Path(args.image).resolve()
@@ -130,7 +137,7 @@ def main():
         'batchSize': args.batch_size,
         'batches': batches,
         'statusOutput': str(status_path),
-        'nextStep': 'Run local enrichment with checkpoints unless skipped.',
+        'nextStep': 'Run local enrichment with checkpoints unless skipped, then auto-import inventory unless disabled.',
     }
     manifest_path = out_dir / 'catalog_flow_manifest.json'
     write_text(manifest_path, json.dumps(manifest, ensure_ascii=False, indent=2))
@@ -163,21 +170,50 @@ def main():
         if enrichment_path.exists():
             enrichment = json.loads(enrichment_path.read_text(encoding='utf-8'))
             manifest['enrichmentSummary'] = enrichment.get('summary', {})
+            artifacts = {
+                'ocrOutput': str(ocr_path),
+                'candidateOutput': str(candidates_path),
+                'manifestOutput': str(manifest_path),
+                'enrichmentOutput': str(enrichment_path),
+            }
+
+            if args.auto_import:
+                print('stage import:start', flush=True)
+                import_path = out_dir / 'inventory_import_results.json'
+                update_status(status_path, stage='import', state='running', artifacts={**artifacts, 'importOutput': str(import_path)})
+                append_event(status_path, 'stage', 'Inventory import started', {
+                    'importMode': args.import_mode,
+                    'minConfidence': args.import_min_confidence,
+                    'dryRun': args.import_dry_run,
+                })
+                run_python_stream(
+                    IMPORT_SCRIPT,
+                    str(enrichment_path),
+                    str(candidates_path),
+                    '--out', str(import_path),
+                    '--status', str(status_path),
+                    '--min-confidence', str(args.import_min_confidence),
+                    '--mode', str(args.import_mode),
+                    '--default-stock', str(args.import_default_stock),
+                    *( ['--dry-run'] if args.import_dry_run else [] ),
+                )
+                print('stage import:done', flush=True)
+                manifest['importOutput'] = str(import_path)
+                if import_path.exists():
+                    imported = json.loads(import_path.read_text(encoding='utf-8'))
+                    manifest['importSummary'] = imported.get('summary', {})
+                    artifacts['importOutput'] = str(import_path)
+
             write_text(manifest_path, json.dumps(manifest, ensure_ascii=False, indent=2))
             update_status(
                 status_path,
                 state='completed',
                 stage='completed',
                 progress=enrichment.get('progress', {'processed': len(product_candidates), 'total': len(product_candidates)}),
-                summary=enrichment.get('summary', {}),
-                artifacts={
-                    'ocrOutput': str(ocr_path),
-                    'candidateOutput': str(candidates_path),
-                    'manifestOutput': str(manifest_path),
-                    'enrichmentOutput': str(enrichment_path),
-                },
+                summary=manifest.get('importSummary') or enrichment.get('summary', {}),
+                artifacts=artifacts,
             )
-            append_event(status_path, 'job', 'Catalog flow completed', enrichment.get('summary', {}))
+            append_event(status_path, 'job', 'Catalog flow completed', manifest.get('importSummary') or enrichment.get('summary', {}))
     else:
         update_status(status_path, state='completed', stage='completed')
         append_event(status_path, 'job', 'Catalog flow completed without enrichment')

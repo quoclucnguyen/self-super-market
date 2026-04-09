@@ -15,8 +15,12 @@ async function getProducts(searchParams: Awaited<Promise<{ search?: string; cate
     conditions.push(sql`
       (
         ${products.name} ILIKE ${pattern}
-        OR ${products.barcode} ILIKE ${pattern}
-        OR ${products.sku} ILIKE ${pattern}
+        OR EXISTS (
+          SELECT 1 FROM ${productCodes}
+          WHERE ${productCodes.productId} = ${products.id}
+          AND ${productCodes.code} ILIKE ${pattern}
+          AND ${productCodes.isActive} = true
+        )
         OR ${products.description} ILIKE ${pattern}
       )
     `);

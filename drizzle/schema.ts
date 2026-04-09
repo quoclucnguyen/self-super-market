@@ -1,4 +1,5 @@
 import {
+  pgEnum,
   pgTable,
   serial,
   text,
@@ -39,8 +40,6 @@ export const brands = pgTable('brands', {
 export const products = pgTable('products', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
-  barcode: text('barcode').notNull().unique(),
-  sku: text('sku').unique(),
 
   categoryId: integer('category_id').notNull().references(() => categories.id, { onDelete: 'restrict' }),
   brandId: integer('brand_id').references(() => brands.id, { onDelete: 'set null' }),
@@ -70,9 +69,7 @@ export const products = pgTable('products', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
-  barcodeIdx: index('barcode_idx').on(table.barcode),
   categoryIdx: index('category_idx').on(table.category),
-  skuIdx: index('sku_idx').on(table.sku),
   categoryIdIdx: index('products_category_id_idx').on(table.categoryId),
   brandIdIdx: index('products_brand_id_idx').on(table.brandId),
 }));
@@ -91,6 +88,7 @@ export const productImages = pgTable('product_images', {
 
 export const productsRelations = relations(products, ({ many }) => ({
   images: many(productImages),
+  codes: many(productCodes),
 }));
 
 export const categoriesRelations = relations(categories, ({ one, many }) => ({
@@ -124,11 +122,67 @@ export const productImagesRelations = relations(productImages, ({ one }) => ({
   }),
 }));
 
+// Product codes (barcodes/SKUs) - one product can have multiple codes
+export const productCodeTypeEnum = pgEnum('product_code_type', ['barcode', 'sku']);
+
+export const activityTypeEnum = pgEnum('activity_type', [
+  'product_created',
+  'product_updated',
+  'product_deleted',
+  'product_imported',
+  'category_created',
+  'brand_created',
+]);
+
+export const activityLog = pgTable('activity_log', {
+  id: serial('id').primaryKey(),
+  entityType: text('entity_type').notNull(), // 'product', 'category', 'brand', etc.
+  entityId: integer('entity_id').notNull(), // ID of the affected entity
+  activityType: activityTypeEnum('activity_type').notNull(),
+  userId: integer('user_id'), // Optional: track who performed the action
+  userName: text('user_name'), // Optional: store user name for display
+  changes: text('changes'), // JSON string describing what changed
+  ipAddress: text('ip_address'), // Optional: track IP for security
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => ({
+  entityTypeIdx: index('activity_log_entity_type_idx').on(table.entityType),
+  entityIdIdx: index('activity_log_entity_id_idx').on(table.entityId),
+  activityTypeIdx: index('activity_log_activity_type_idx').on(table.activityType),
+  createdAtIdx: index('activity_log_created_at_idx').on(table.createdAt),
+}));
+
+export const productCodes = pgTable('product_codes', {
+  id: serial('id').primaryKey(),
+  productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  code: text('code').notNull(),
+  codeType: productCodeTypeEnum('code_type').notNull().default('barcode'),
+  isPrimary: boolean('is_primary').notNull().default(false),
+  isActive: boolean('is_active').notNull().default(true),
+  order: integer('order').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  productIdIdx: index('product_codes_product_id_idx').on(table.productId),
+  codeIdx: index('product_codes_code_idx').on(table.code),
+  codeUnique: index('product_codes_code_unique').on(table.code),
+}));
+
+export const productCodesRelations = relations(productCodes, ({ one }) => ({
+  product: one(products, {
+    fields: [productCodes.productId],
+    references: [products.id],
+  }),
+}));
+
 // Type inference for better type safety
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
 export type ProductImage = typeof productImages.$inferSelect;
 export type NewProductImage = typeof productImages.$inferInsert;
+export type ProductCode = typeof productCodes.$inferSelect;
+export type NewProductCode = typeof productCodes.$inferInsert;
+export type ActivityLog = typeof activityLog.$inferSelect;
+export type NewActivityLog = typeof activityLog.$inferInsert;
 export type Category = typeof categories.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
 export type Brand = typeof brands.$inferSelect;

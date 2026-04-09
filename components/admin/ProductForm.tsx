@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   productSchema,
+  type ProductCodeInput,
   type ProductImageInput,
   type ProductInput,
   type ProductParsed,
@@ -14,7 +15,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface ProductFormProps {
   initialData?: Partial<ProductParsed>;
@@ -51,6 +59,8 @@ export function ProductForm({
           ]
         : [];
 
+  const initialCodes = initialData?.codes ?? [];
+
   const {
     register,
     handleSubmit,
@@ -61,8 +71,6 @@ export function ProductForm({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: initialData?.name || '',
-      barcode: initialData?.barcode || '',
-      sku: initialData?.sku || '',
       price: initialData?.price ?? undefined,
       unit: initialData?.unit || 'Cái',
       weightVolume: initialData?.weightVolume || '',
@@ -80,11 +88,48 @@ export function ProductForm({
       imageUrl: initialData?.imageUrl || '',
       imagePublicId: initialData?.imagePublicId || '',
       images: initialImages,
+      codes: initialCodes,
       isActive: initialData?.isActive ?? true,
     },
   });
 
   const images = (watch('images') || []) as ProductImageInput[];
+  const codes = (watch('codes') || []) as ProductCodeInput[];
+
+  const handleAddCode = () => {
+    const newCodes = [
+      ...codes,
+      {
+        code: '',
+        codeType: 'barcode' as const,
+        isPrimary: codes.length === 0,
+        isActive: true,
+        order: codes.length,
+      },
+    ];
+    setValue('codes', newCodes, { shouldDirty: true, shouldValidate: true });
+  };
+
+  const handleRemoveCode = (index: number) => {
+    const newCodes = codes.filter((_, i) => i !== index);
+    if (codes[index]?.isPrimary && newCodes.length > 0) {
+      newCodes[0] = { ...newCodes[0], isPrimary: true };
+    }
+    setValue('codes', newCodes, { shouldDirty: true, shouldValidate: true });
+  };
+
+  const handleCodeChange = (index: number, field: keyof ProductCodeInput, value: any) => {
+    const newCodes = codes.map((code, i) => {
+      if (i === index) {
+        return { ...code, [field]: value };
+      }
+      if (field === 'isPrimary' && value === true) {
+        return { ...code, isPrimary: false };
+      }
+      return code;
+    });
+    setValue('codes', newCodes, { shouldDirty: true, shouldValidate: true });
+  };
 
   const handleImagesChange = (nextImages: ProductImageInput[]) => {
     setValue('images', nextImages, { shouldDirty: true, shouldValidate: true });
@@ -96,6 +141,101 @@ export function ProductForm({
 
   return (
     <form onSubmit={handleSubmit((data) => onSubmit(data))} className="space-y-6">
+      {/* Product Codes Section */}
+      <div>
+        <div className="flex items-center justify-between">
+          <Label>Product Barcodes & SKUs</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAddCode}
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Add Code
+          </Button>
+        </div>
+        <p className="text-sm text-muted-foreground mb-2">
+          Add one or more barcodes and SKU codes for this product
+        </p>
+
+        {codes.length === 0 && (
+          <p className="text-sm text-muted-foreground italic mb-2">
+            No codes added yet. Click "Add Code" to add at least one barcode.
+          </p>
+        )}
+
+        <div className="space-y-2 mt-2">
+          {codes.map((code, index) => (
+            <div key={index} className="flex gap-2 items-start">
+              <div className="flex-1 grid grid-cols-12 gap-2">
+                <div className="col-span-5">
+                  <Input
+                    value={code.code}
+                    onChange={(e) => handleCodeChange(index, 'code', e.target.value)}
+                    placeholder={code.codeType === 'barcode' ? 'Barcode (e.g., 1234567890123)' : 'SKU (e.g., BEV-COCA-330)'}
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="col-span-3">
+                  <Select
+                    value={code.codeType}
+                    onValueChange={(value) => handleCodeChange(index, 'codeType', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="barcode">Barcode</SelectItem>
+                      <SelectItem value="sku">SKU</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-3 flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={code.isPrimary}
+                      onChange={() => handleCodeChange(index, 'isPrimary', true)}
+                      className="w-4 h-4"
+                      name={`primary-code-${codes.length}`}
+                    />
+                    <span className={code.isPrimary ? 'font-semibold text-blue-600 dark:text-blue-400' : ''}>
+                      Primary
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={code.isActive}
+                      onChange={(e) => handleCodeChange(index, 'isActive', e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                    Active
+                  </label>
+                </div>
+                <div className="col-span-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveCode(index)}
+                    disabled={codes.length === 1}
+                    className="h-10 w-10 p-0"
+                    aria-label={`Remove code ${index + 1}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {errors.codes && (
+          <p className="text-destructive text-sm mt-1" role="alert">{errors.codes.message}</p>
+        )}
+      </div>
+
       {/* Image Upload */}
       <div>
         <Label>Product Images</Label>
@@ -121,34 +261,6 @@ export function ProductForm({
         {errors.name && (
           <p className="text-destructive text-sm mt-1">{errors.name.message}</p>
         )}
-      </div>
-
-      {/* Barcode */}
-      <div>
-        <Label htmlFor="barcode">
-          Barcode <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          {...register('barcode')}
-          id="barcode"
-          placeholder="Enter barcode (e.g., 1234567890123)"
-          className="mt-2"
-        />
-        {errors.barcode && (
-          <p className="text-destructive text-sm mt-1">{errors.barcode.message}</p>
-        )}
-      </div>
-
-      {/* SKU */}
-      <div>
-        <Label htmlFor="sku">SKU</Label>
-        <Input
-          {...register('sku')}
-          id="sku"
-          placeholder="VD: BEV-COCA-330"
-          className="mt-2"
-        />
-        {errors.sku && <p className="text-destructive text-sm mt-1">{errors.sku.message}</p>}
       </div>
 
       {/* Price and Stock Quantity */}

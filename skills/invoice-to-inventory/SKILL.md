@@ -42,7 +42,8 @@ using:
 
 1. Prefer correctness over speed.
 2. Return structured data for every extracted line item.
-3. If OCR/barcode confidence is low, request confirmation before writing.
+3. Default to full automatic execution without a manual confirmation gate.
+4. Keep risky rows out of automatic import instead of pausing the whole job for confirmation.
 
 ## Skill layout
 
@@ -109,15 +110,19 @@ Use this flow when the user wants the receipt to become a **product knowledge so
    - Resolve conflicts by source quality and confidence.
    - Keep `sourceUrls` for audit.
 
-7. **Preview for confirmation**
-   - Show grouped results:
+7. **Preview as output, not a gate**
+   - Show grouped results after processing:
      - confident catalog-ready items
      - ambiguous items
      - failed lookups
+   - Do not block the job waiting for user confirmation.
 
 8. **Import into product system**
    - Create/update product records using enriched identity data.
    - In this mode, `stockQuantity` and receipt `lineTotal` do not need to block import.
+   - Auto-import should run by default immediately after enrichment.
+   - Default auto-import threshold should be `medium` confidence or higher.
+   - Keep weighted/internal produce and unreliable barcode rows out of automatic import unless the caller explicitly lowers the threshold.
 
 Recommended one-shot command for this flow:
 - `python3 scripts/run_catalog_flow.py <receipt-image> --out-dir runs/<run-name> --batch-size 8`
@@ -129,7 +134,8 @@ Default behavior should be fully automatic for catalog enrichment:
 4. run local web enrichment automatically
 5. write checkpointed partial results during long runs
 6. maintain a persistent `job_status.json` with stage, state, progress, artifacts, summary, and recent events
-7. finish with a machine-readable summary grouped into `ready`, `ambiguous`, `failed`, and `skippedInternalWeighted`
+7. auto-import eligible items into inventory unless explicitly disabled
+8. finish with a machine-readable summary grouped into `ready`, `ambiguous`, `failed`, and `skippedInternalWeighted`
 
 This command should produce at least:
 - `runs/<run-name>/receipt_ocr_output.json`
@@ -138,6 +144,7 @@ This command should produce at least:
 - `runs/<run-name>/enrichment_results.json`
 - `runs/<run-name>/catalog_flow_manifest.json`
 - `runs/<run-name>/job_status.json`
+- `runs/<run-name>/inventory_import_results.json` unless auto-import is disabled
 
 If the user explicitly wants only OCR/candidates, use:
 - `python3 scripts/run_catalog_flow.py <receipt-image> --out-dir runs/<run-name> --skip-enrichment`
@@ -152,7 +159,7 @@ Preferred local pipeline for long receipt images:
 5. Reconstruct lines from `image_to_data()` output.
 6. Pair product-name line with following numeric detail line.
 7. Dedupe duplicate detections across overlapping segments.
-8. Produce a preview before any write.
+8. Produce a machine-readable preview/output before any risky write filtering decisions.
 
 Extract:
 - `merchantName`
@@ -169,7 +176,7 @@ Extract:
 
 Normalization:
 - Long receipts should be auto-segmented instead of immediately asking user to crop manually.
-- Weighted produce may have decimal quantity (for example `0.885`, `1.490`, `9,345`). Do **not** force these to integer stock until confirmation.
+- Weighted produce may have decimal quantity (for example `0.885`, `1.490`, `9,345`). Do not auto-convert these into stock import unless an explicit stock-mode policy says to do so.
 - Merge split VND tokens like `19, 900` -> `19,900`.
 - If missing `lineTotal`, compute from `unitPrice * quantity`.
 - Clean noisy product-name fragments (promo text, leading item indexes like `@35`, duplicate spaces, OCR confusions such as `KHOAT -> KHOAI` when obvious).
@@ -211,7 +218,7 @@ Recommended source preference:
 
 Rules:
 - Keep source-backed values only.
-- If multiple identities conflict, mark as ambiguous and ask user to choose.
+- If multiple identities conflict, mark as ambiguous and exclude from automatic import.
 - If barcode cannot be confidently verified, keep OCR barcode but lower confidence.
 - Skip weighted/internal produce codes early when they are unlikely to map to real retail product pages.
 - Always checkpoint partial enrichment output during internet-heavy runs.
@@ -245,7 +252,7 @@ Mapping for **catalog enrichment mode**:
 
 Mapping for **stock import mode**:
 - `name`: normalized OCR/enriched item name
-- `barcode`: OCR/enriched/user-confirmed value
+- `barcode`: OCR/enriched value
 - `price`: `unitPrice` as number (`> 0`)
 - `stockQuantity`: invoice quantity
 - `description`, `category`: enriched if available
@@ -266,7 +273,7 @@ Per product:
 3. If not found:
    - `POST /api/products`
 
-### 5) Confirm before write
+### 5) Automatic write policy
 
 Before POST/PUT, show preview grouped into at least:
 - catalog-ready confident items
@@ -284,13 +291,16 @@ Preview should include:
 - `confidence`
 - `sourceUrls`
 
-Ask for explicit confirmation when:
-- any item is low confidence,
-- any barcode is inferred but weakly verified,
-- any weighted item has decimal quantity,
-- web sources disagree on identity,
-- totals/prices appear inconsistent in stock mode,
-- or user did not explicitly request full automatic mode.
+Default behavior:
+- continue automatically without waiting for explicit confirmation
+- import only rows that pass automatic quality checks
+- leave low-confidence, conflicting, weighted, malformed-barcode, or price-inconsistent rows in skipped/ambiguous output for later review
+
+Only ask for explicit confirmation when:
+- there is no usable image input,
+- OCR fails so badly that no viable candidates can be produced,
+- API validation fails in a way that requires a human decision,
+- or the caller explicitly asks for a review-first flow.
 
 For catalog enrichment mode, if the user only wants a product database, it is acceptable to ignore noisy quantity/line-total fields and proceed based on barcode + web-verified product identity.
 
@@ -331,8 +341,8 @@ curl -sS -X PUT "${SELF_SUPER_MARKET_API_BASE_URL:-https://self-super-market.ver
 ## Failure handling
 
 - OCR fails completely -> ask for clearer image.
-- OCR is partially usable on long receipts -> continue with auto-segmentation + preview instead of immediately giving up.
-- Enrichment fails -> proceed with known fields; request missing barcode/category.
+- OCR is partially usable on long receipts -> continue with auto-segmentation + partial automatic output instead of immediately giving up.
+- Enrichment fails -> proceed with known fields and skip non-importable rows instead of blocking on confirmation.
 - API validation fails -> show failing field and ask user to correct.
 - If OCR environment is missing dependencies, install/verify at least:
   - `python3-pil` / `Pillow`
@@ -350,7 +360,7 @@ For stock import mode, return:
 - created count
 - updated count
 - skipped/failed count
-- items needing manual confirmation
+- skipped rows requiring later review
 
 For catalog enrichment mode, return:
 - total OCR candidates
@@ -360,12 +370,14 @@ For catalog enrichment mode, return:
 - failed lookup count
 - skipped internal weighted count
 - items ready to import
-- items needing manual confirmation
+- skipped rows requiring later review
 
 ## Automation notes
 
 Preferred automatic command:
 - `python3 scripts/run_catalog_flow.py <receipt-image> --out-dir runs/<run-name> --batch-size 8`
+- enrichment only, no inventory write: `python3 scripts/run_catalog_flow.py <receipt-image> --out-dir runs/<run-name> --batch-size 8 --no-auto-import`
+- preview import payloads only: `python3 scripts/run_catalog_flow.py <receipt-image> --out-dir runs/<run-name> --batch-size 8 --import-dry-run`
 
 Support scripts:
 - `scripts/enrich_catalog_candidates.py <receipt_catalog_candidates.json> --out <output.json>`
@@ -380,6 +392,10 @@ Behavior requirements:
 - write partial checkpoints during enrichment
 - survive partial network failures by keeping completed results
 - leave a final `enrichment_results.json` with `summary` + `results`
+- continue into inventory import automatically after enrichment unless `--no-auto-import` is set, and write `inventory_import_results.json`
+- default auto-import policy should be `--import-min-confidence medium`
+- for practical receipt imports, allow auto-import of OCR-stable packaged items even when enrichment confidence remains low, as long as barcode looks valid, item is not weighted/internal, OCR confidence is high, and price is sane
+- keep weighted produce, malformed barcodes, and obviously noisy rows out of automatic import unless explicitly overridden
 - prefer running long jobs in background and notify the user from stage changes/checkpoints rather than waiting for them to ask
 - for detached execution, use `scripts/launch_catalog_flow_background.py` so the caller gets `jobId`, `statusOutput`, `logOutput`, and `outDir` immediately
 - pair background runs with `scripts/watch_catalog_job_notify.py` so stage/progress/completion updates are pushed back automatically

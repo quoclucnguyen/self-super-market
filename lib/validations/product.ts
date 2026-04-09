@@ -7,6 +7,15 @@ export const productImageSchema = z.object({
   order: z.coerce.number().int().min(0).optional(),
 });
 
+export const productCodeSchema = z.object({
+  id: z.number().int().positive().optional(),
+  code: z.string().min(1, 'Code is required').max(100, 'Code too long').trim(),
+  codeType: z.enum(['barcode', 'sku'], { required_error: 'Code type required' }),
+  isPrimary: z.boolean().optional().default(false),
+  isActive: z.boolean().optional().default(true),
+  order: z.coerce.number().int().min(0).optional(),
+});
+
 const optionalPriceSchema = z.preprocess(
   (value) => {
     if (value === '' || value === null || value === undefined) {
@@ -28,14 +37,26 @@ export const productSchema = z.object({
     .min(1, 'Name is required')
     .max(200, 'Name must be less than 200 characters')
     .trim(),
-  barcode: z.string()
-    .min(1, 'Barcode is required')
-    .max(50, 'Barcode must be less than 50 characters')
-    .trim(),
-  sku: z.string()
-    .max(50, 'SKU must be less than 50 characters')
-    .optional()
-    .or(z.literal('').transform(() => undefined)),
+
+  // Product codes (barcodes/SKUs)
+  codes: z.array(productCodeSchema)
+    .min(1, 'At least one barcode is required')
+    .refine(
+      (codes) => codes.some((c) => c.codeType === 'barcode'),
+      'At least one barcode is required',
+    )
+    .refine(
+      (codes) => codes.filter((c) => c.isPrimary).length <= 1,
+      'Only one primary code allowed',
+    )
+    .refine(
+      (codes) => {
+        const codeValues = codes.map((c) => c.code.toLowerCase());
+        return new Set(codeValues).size === codeValues.length;
+      },
+      'Codes must be unique within product',
+    )
+    .optional(),
 
   categoryId: z.coerce.number().int().positive().optional(),
   categoryName: z.string()
@@ -110,6 +131,7 @@ export type ProductRawInput = z.input<typeof productSchema>;
 export type ProductInput = z.infer<typeof productSchema>;
 export type ProductParsed = ProductInput;
 export type ProductImageInput = z.infer<typeof productImageSchema>;
+export type ProductCodeInput = z.infer<typeof productCodeSchema>;
 
 export const productUpdateSchema = productSchema.partial();
 

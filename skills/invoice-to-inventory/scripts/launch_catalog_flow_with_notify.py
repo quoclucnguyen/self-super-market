@@ -25,6 +25,12 @@ def main():
     parser.add_argument('--poll-interval', type=float, default=5.0)
     parser.add_argument('--max-idle-seconds', type=float, default=3600.0)
     parser.add_argument('--skip-enrichment', action='store_true')
+    parser.add_argument('--auto-import', dest='auto_import', action='store_true', default=True)
+    parser.add_argument('--no-auto-import', dest='auto_import', action='store_false')
+    parser.add_argument('--import-min-confidence', default='medium', choices=['high', 'medium', 'low'])
+    parser.add_argument('--import-mode', default='catalog', choices=['catalog', 'stock'])
+    parser.add_argument('--import-default-stock', type=int, default=1)
+    parser.add_argument('--import-dry-run', action='store_true')
     args = parser.parse_args()
 
     launch_cmd = [
@@ -40,6 +46,15 @@ def main():
         launch_cmd.extend(['--run-name', args.run_name])
     if args.skip_enrichment:
         launch_cmd.append('--skip-enrichment')
+    if args.auto_import:
+        launch_cmd.append('--auto-import')
+        launch_cmd.extend(['--import-min-confidence', args.import_min_confidence])
+        launch_cmd.extend(['--import-mode', args.import_mode])
+        launch_cmd.extend(['--import-default-stock', str(args.import_default_stock)])
+    else:
+        launch_cmd.append('--no-auto-import')
+    if args.import_dry_run:
+        launch_cmd.append('--import-dry-run')
 
     launch_result = subprocess.run(launch_cmd, check=True, capture_output=True, text=True)
     payload = json.loads(launch_result.stdout)

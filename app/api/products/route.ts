@@ -3,7 +3,7 @@ import { desc, eq, sql } from 'drizzle-orm';
 import { ZodError } from 'zod';
 
 import { db } from '@/lib/db';
-import { products, categories, brands, productImages } from '@/drizzle/schema';
+import { products, categories, brands, productImages, productCodes } from '@/drizzle/schema';
 import { productQuerySchema, productSchema } from '@/lib/validations/product';
 import {
   buildSearchConditions,
@@ -11,8 +11,11 @@ import {
   findOrCreateCategory,
   getDetailedProductById,
   getImagesByProductIds,
+  getProductCodesByProductIds,
+  logActivity,
   mergePrimaryImage,
   normalizeIncomingImages,
+  normalizeIncomingCodes,
 } from './helpers';
 
 // GET /api/products - List products with pagination and filters
@@ -48,9 +51,11 @@ export async function GET(request: NextRequest) {
 
     const productIds = rows.map((row) => row.product.id);
     const imagesByProductId = await getImagesByProductIds(productIds);
+    const codesByProductId = await getProductCodesByProductIds(productIds);
 
     const productList = rows.map((row) => {
       const images = imagesByProductId.get(row.product.id) ?? [];
+      const codes = codesByProductId.get(row.product.id) ?? [];
       const merged = mergePrimaryImage(row.product, images);
 
       return {
@@ -58,6 +63,7 @@ export async function GET(request: NextRequest) {
         categoryName: row.categoryName ?? merged.category,
         brandName: row.brandName,
         images,
+        codes,
       };
     });
 
@@ -90,34 +96,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = productSchema.parse(body);
 
-    const [existingBarcode] = await db
-      .select({ id: products.id })
-      .from(products)
-      .where(eq(products.barcode, validatedData.barcode))
-      .limit(1);
-
-    if (existingBarcode) {
-      return NextResponse.json(
-        { error: 'Product with this barcode already exists' },
-        { status: 400 },
-      );
-    }
-
-    if (validatedData.sku) {
-      const [existingSku] = await db
-        .select({ id: products.id })
-        .from(products)
-        .where(eq(products.sku, validatedData.sku))
-        .limit(1);
-
-      if (existingSku) {
-        return NextResponse.json(
-          { error: 'Product with this SKU already exists' },
-          { status: 400 },
-        );
-      }
-    }
-
     const categoryText = validatedData.categoryName ?? validatedData.category;
     const brandText = validatedData.brandName;
     const normalizedImages = normalizeIncomingImages(
@@ -125,6 +103,7 @@ export async function POST(request: NextRequest) {
       validatedData.imageUrl,
       validatedData.imagePublicId,
     );
+    const normalizedCodes = normalizeIncomingCodes(validatedData.codes);
 
     const productId = await db.transaction(async (tx) => {
       let resolvedCategoryId = validatedData.categoryId ?? null;
@@ -170,8 +149,6 @@ export async function POST(request: NextRequest) {
 
       const insertPayload = {
         name: validatedData.name,
-        barcode: validatedData.barcode,
-        sku: validatedData.sku ?? null,
         categoryId: resolvedCategoryId,
         brandId: resolvedBrandId,
         price: (validatedData.price ?? 0).toString(),
@@ -209,8 +186,30 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (normalizedCodes.length > 0) {
+        await tx.insert(productCodes).values(
+          normalizedCodes.map((code) => ({
+            productId: createdProduct.id,
+            code: code.code,
+            codeType: code.codeType,
+            isPrimary: code.isPrimary,
+            isActive: code.isActive,
+            order: code.order,
+          })),
+        );
+      }
+
       return createdProduct.id;
     });
+
+    // Log activity
+    await logActivity(
+      'product',
+      createdProduct.id,
+      'product_created',
+      'Admin',
+      JSON.stringify({ name: validatedData.name, codesCount: normalizedCodes.length }),
+    );
 
     const product = await getDetailedProductById(productId);
     return NextResponse.json(product, { status: 201 });

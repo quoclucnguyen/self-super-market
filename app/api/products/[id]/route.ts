@@ -4,12 +4,14 @@ import { ZodError } from 'zod';
 
 import { db } from '@/lib/db';
 import { deleteImage } from '@/lib/cloudinary';
-import { categories, productImages, products } from '@/drizzle/schema';
+import { categories, productCodes, productImages, products } from '@/drizzle/schema';
 import { productUpdateSchema } from '@/lib/validations/product';
 import {
   findOrCreateBrand,
   findOrCreateCategory,
   getDetailedProductById,
+  logActivity,
+  normalizeIncomingCodes,
   normalizeIncomingImages,
 } from '../helpers';
 
@@ -69,33 +71,6 @@ export async function PUT(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    if (validatedData.barcode && validatedData.barcode !== existing.barcode) {
-      const [conflict] = await db
-        .select({ id: products.id })
-        .from(products)
-        .where(and(eq(products.barcode, validatedData.barcode), ne(products.id, id)))
-        .limit(1);
-
-      if (conflict) {
-        return NextResponse.json(
-          { error: 'Product with this barcode already exists' },
-          { status: 400 },
-        );
-      }
-    }
-
-    if (validatedData.sku) {
-      const [conflictSku] = await db
-        .select({ id: products.id })
-        .from(products)
-        .where(and(eq(products.sku, validatedData.sku), ne(products.id, id)))
-        .limit(1);
-
-      if (conflictSku) {
-        return NextResponse.json({ error: 'Product with this SKU already exists' }, { status: 400 });
-      }
-    }
-
     const categoryText = validatedData.categoryName ?? validatedData.category;
     const brandText = validatedData.brandName;
 
@@ -109,6 +84,9 @@ export async function PUT(
       validatedData.imageUrl,
       validatedData.imagePublicId,
     );
+
+    const hasIncomingCodes = validatedData.codes !== undefined;
+    const normalizedCodes = normalizeIncomingCodes(validatedData.codes);
 
     const existingImageRows = hasIncomingImages
       ? await db
@@ -165,8 +143,6 @@ export async function PUT(
 
       const updatePayload = {
         ...(validatedData.name !== undefined && { name: validatedData.name }),
-        ...(validatedData.barcode !== undefined && { barcode: validatedData.barcode }),
-        ...(validatedData.sku !== undefined && { sku: validatedData.sku ?? null }),
         ...(validatedData.price !== undefined && { price: validatedData.price.toString() }),
         ...(validatedData.unit !== undefined && { unit: validatedData.unit }),
         ...(validatedData.weightVolume !== undefined && {
@@ -235,11 +211,45 @@ export async function PUT(
           );
         }
       }
+
+      if (hasIncomingCodes) {
+        await tx.delete(productCodes).where(eq(productCodes.productId, id));
+
+        if (normalizedCodes.length > 0) {
+          await tx.insert(productCodes).values(
+            normalizedCodes.map((code) => ({
+              productId: id,
+              code: code.code,
+              codeType: code.codeType,
+              isPrimary: code.isPrimary,
+              isActive: code.isActive,
+              order: code.order,
+            })),
+          );
+        }
+      }
     });
 
     if (imagesToDelete.length > 0) {
       await Promise.allSettled(imagesToDelete.map((publicId) => deleteImage(publicId)));
     }
+
+    // Log activity (track what was changed)
+    const changedFields: string[] = [];
+    if (validatedData.name) changedFields.push('name');
+    if (hasIncomingImages) changedFields.push('images');
+    if (hasIncomingCodes) changedFields.push('codes');
+    if (Object.keys(validatedData).some(k => k.startsWith('price') || k === 'stockQuantity')) {
+      changedFields.push('details');
+    }
+
+    await logActivity(
+      'product',
+      id,
+      'product_updated',
+      'Admin',
+      changedFields.length > 0 ? JSON.stringify({ changedFields }) : undefined,
+    );
 
     const updated = await getDetailedProductById(id);
     return NextResponse.json(updated);
@@ -300,6 +310,15 @@ export async function DELETE(
       .where(eq(productImages.productId, id));
 
     await db.delete(products).where(eq(products.id, id));
+
+    // Log activity before deleting
+    await logActivity(
+      'product',
+      id,
+      'product_deleted',
+      'Admin',
+      JSON.stringify({ name: existing.name }),
+    );
 
     const imagePublicIds = new Set(
       [...existingImageRows.map((row) => row.imagePublicId), existing.imagePublicId]

@@ -25,6 +25,12 @@ def main():
     parser.add_argument('--checkpoint-every', type=int, default=8)
     parser.add_argument('--pause', type=float, default=0.6)
     parser.add_argument('--skip-enrichment', action='store_true')
+    parser.add_argument('--auto-import', dest='auto_import', action='store_true', default=True)
+    parser.add_argument('--no-auto-import', dest='auto_import', action='store_false')
+    parser.add_argument('--import-min-confidence', default='medium', choices=['high', 'medium', 'low'])
+    parser.add_argument('--import-mode', default='catalog', choices=['catalog', 'stock'])
+    parser.add_argument('--import-default-stock', type=int, default=1)
+    parser.add_argument('--import-dry-run', action='store_true')
     args = parser.parse_args()
 
     image_path = Path(args.image).resolve()
@@ -47,6 +53,15 @@ def main():
     ]
     if args.skip_enrichment:
         cmd.append('--skip-enrichment')
+    if args.auto_import:
+        cmd.append('--auto-import')
+        cmd.extend(['--import-min-confidence', args.import_min_confidence])
+        cmd.extend(['--import-mode', args.import_mode])
+        cmd.extend(['--import-default-stock', str(args.import_default_stock)])
+    else:
+        cmd.append('--no-auto-import')
+    if args.import_dry_run:
+        cmd.append('--import-dry-run')
 
     update_status(
         status_path,

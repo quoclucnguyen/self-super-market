@@ -2,10 +2,21 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import type { Product } from '@/drizzle/schema';
+import type { ProductCode } from '@/drizzle/schema';
+import { Tooltip } from '@/components/ui/tooltip';
+
+interface ProductWithCodes {
+  id: number;
+  name: string;
+  price: string;
+  category: string | null;
+  stockQuantity: number;
+  imageUrl: string | null;
+  codes: ProductCode[];
+}
 
 interface ProductListProps {
-  products: Product[];
+  products: ProductWithCodes[];
   currentPage?: number;
   totalPages?: number;
   searchParams: { search?: string; category?: string; page?: string };
@@ -49,7 +60,7 @@ export function ProductList({
                 Product
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Barcode
+                Codes
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Category
@@ -89,7 +100,47 @@ export function ProductList({
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 font-mono">
-                  {product.barcode}
+                  {product.codes
+                    .filter((c) => c.isActive)
+                    .filter((c) => c.isPrimary || c.codeType === 'barcode')
+                    .slice(0, 2)
+                    .map((c) => (
+                      <Tooltip
+                        key={c.id}
+                        content={
+                          <div className="text-left">
+                            <div className="font-semibold">{c.code}</div>
+                            <div className="text-xs opacity-75">
+                              {c.codeType} {c.isPrimary && '• Primary'}
+                            </div>
+                          </div>
+                        }
+                      >
+                        <span className="inline-block mr-2 cursor-help border-b border-dashed border-gray-400 dark:border-gray-600">
+                          {c.code}
+                        </span>
+                      </Tooltip>
+                    ))}
+                  {product.codes.filter((c) => c.isActive).length > 2 && (
+                    <Tooltip
+                      content={
+                        <div className="text-left">
+                          {product.codes
+                            .filter((c) => c.isActive)
+                            .slice(2)
+                            .map((c) => (
+                              <div key={c.id} className="text-xs">
+                                {c.code} • {c.codeType} {c.isPrimary && '• Primary'}
+                              </div>
+                            ))}
+                        </div>
+                      }
+                    >
+                      <span className="text-gray-400 cursor-help border-b border-dashed border-gray-300 dark:border-gray-700">
+                        +{product.codes.filter((c) => c.isActive).length - 2} more
+                      </span>
+                    </Tooltip>
+                  )}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {product.category || '-'}
@@ -146,9 +197,29 @@ export function ProductList({
                 <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                   {product.name}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                  {product.barcode}
-                </p>
+                <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                  {product.codes
+                    .filter((c) => c.isActive)
+                    .filter((c) => c.isPrimary || c.codeType === 'barcode')
+                    .slice(0, 2)
+                    .map((c) => (
+                      <Tooltip
+                        key={c.id}
+                        content={
+                          <div className="text-left">
+                            <div className="font-semibold">{c.code}</div>
+                            <div className="text-xs opacity-75">
+                              {c.codeType} {c.isPrimary && '• Primary'}
+                            </div>
+                          </div>
+                        }
+                      >
+                        <span className="inline-block mr-1 cursor-help border-b border-dashed border-gray-400 dark:border-gray-600">
+                          {c.code}
+                        </span>
+                      </Tooltip>
+                    ))}
+                </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                     ${parseFloat(product.price).toFixed(2)}
