@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
     // Log activity
     await logActivity(
       'product',
-      createdProduct.id,
+      productId,
       'product_created',
       'Admin',
       JSON.stringify({ name: validatedData.name, codesCount: normalizedCodes.length }),

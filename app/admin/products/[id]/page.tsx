@@ -1,18 +1,12 @@
 import { ProductForm } from '@/components/admin/ProductForm';
-import { db } from '@/lib/db';
-import { products } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { getDetailedProductById } from '@/app/api/products/helpers';
 import { redirect, notFound } from 'next/navigation';
 import type { ProductInput } from '@/lib/validations/product';
 
 async function getProduct(id: string) {
-  const [product] = await db
-    .select()
-    .from(products)
-    .where(eq(products.id, parseInt(id)))
-    .limit(1);
-
-  return product;
+  const productId = Number.parseInt(id, 10);
+  if (Number.isNaN(productId)) return null;
+  return getDetailedProductById(productId);
 }
 
 export default async function EditProductPage({
@@ -63,13 +57,37 @@ export default async function EditProductPage({
         <ProductForm
           initialData={{
             name: product.name,
-            barcode: product.barcode,
             price: parseFloat(product.price),
+            unit: product.unit,
+            weightVolume: product.weightVolume || undefined,
+            categoryName: product.categoryName || product.category || undefined,
+            brandName: product.brandName || undefined,
+            origin: product.origin || undefined,
+            ingredients: product.ingredients || undefined,
+            nutritionalInfo: product.nutritionalInfo || undefined,
+            usageInstructions: product.usageInstructions || undefined,
+            storageInstructions: product.storageInstructions || undefined,
+            shelfLifeDays: product.shelfLifeDays || undefined,
             description: product.description || undefined,
             category: product.category || undefined,
             stockQuantity: product.stockQuantity,
             imageUrl: product.imageUrl || undefined,
             imagePublicId: product.imagePublicId || undefined,
+            images: product.images.map((image, index) => ({
+              imageUrl: image.imageUrl,
+              imagePublicId: image.imagePublicId,
+              isPrimary: image.isPrimary,
+              order: image.order ?? index,
+            })),
+            codes: product.codes.map((code, index) => ({
+              id: code.id,
+              code: code.code,
+              codeType: code.codeType,
+              isPrimary: code.isPrimary,
+              isActive: code.isActive,
+              order: code.order ?? index,
+            })),
+            isActive: product.isActive,
           }}
           onSubmit={updateProduct}
           submitLabel="Update Product"

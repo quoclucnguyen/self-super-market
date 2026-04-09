@@ -3,16 +3,36 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Edit, Trash2, MoreVertical } from 'lucide-react';
-import type { Product } from '@/drizzle/schema';
+import type { Product, ProductCode } from '@/drizzle/schema';
+
+type ProductListItem = Product & {
+  barcode?: string;
+  codes?: ProductCode[];
+};
 
 interface ProductListClientProps {
-  products: Product[];
-  onEdit: (product: Product) => void;
-  onDelete: (product: Product) => void;
+  products: ProductListItem[];
+  onEdit: (product: ProductListItem) => void;
+  onDelete: (product: ProductListItem) => void;
 }
 
 export function ProductListClient({ products, onEdit, onDelete }: ProductListClientProps) {
   const [activeMenu, setActiveMenu] = useState<number | null>(null);
+
+  const getBarcode = (product: ProductListItem) => {
+    if (product.barcode) return product.barcode;
+    const activeCodes = product.codes?.filter((code) => code.isActive) ?? [];
+    return (
+      activeCodes.find((code) => code.codeType === 'barcode' && code.isPrimary)?.code
+      ?? activeCodes.find((code) => code.codeType === 'barcode')?.code
+      ?? activeCodes.find((code) => code.isPrimary)?.code
+      ?? activeCodes[0]?.code
+      ?? 'N/A'
+    );
+  };
+
+  void activeMenu;
+  void setActiveMenu;
 
   const getStockBadgeClass = (quantity: number) => {
     if (quantity > 10) {
@@ -102,7 +122,7 @@ export function ProductListClient({ products, onEdit, onDelete }: ProductListCli
                 </td>
                 <td className="px-6 py-4">
                   <code className="text-sm font-mono text-muted-foreground bg-muted px-2 py-1 rounded">
-                    {product.barcode}
+                    {getBarcode(product)}
                   </code>
                 </td>
                 <td className="px-6 py-4">
@@ -186,7 +206,7 @@ export function ProductListClient({ products, onEdit, onDelete }: ProductListCli
                   {product.name}
                 </h3>
                 <code className="text-xs font-mono text-muted-foreground">
-                  {product.barcode}
+                  {getBarcode(product)}
                 </code>
                 <div className="flex items-center gap-3 mt-2">
                   <span className="font-bold text-foreground">

@@ -14,6 +14,14 @@ type ProductListItem = {
   name: string;
   barcode: string;
   sku: string | null;
+  codes?: Array<{
+    id?: number;
+    code: string;
+    codeType: 'barcode' | 'sku';
+    isPrimary: boolean;
+    isActive: boolean;
+    order: number;
+  }>;
   price: string;
   description: string | null;
   category: string | null;
@@ -324,8 +332,6 @@ export function AdminPageClient({
                     key={selectedProduct?.id || 'new'}
                     initialData={selectedProduct ? {
                       name: selectedProduct.name,
-                      barcode: selectedProduct.barcode,
-                      sku: selectedProduct.sku || undefined,
                       price: parseFloat(selectedProduct.price),
                       unit: selectedProduct.unit,
                       weightVolume: selectedProduct.weightVolume || undefined,
@@ -348,6 +354,32 @@ export function AdminPageClient({
                         isPrimary: image.isPrimary,
                         order: image.order ?? index,
                       })) || [],
+                      codes: selectedProduct.codes?.map((code, index) => ({
+                        id: code.id,
+                        code: code.code,
+                        codeType: code.codeType,
+                        isPrimary: code.isPrimary,
+                        isActive: code.isActive,
+                        order: code.order ?? index,
+                      }))
+                        ?? [
+                          {
+                            code: selectedProduct.barcode,
+                            codeType: 'barcode' as const,
+                            isPrimary: true,
+                            isActive: true,
+                            order: 0,
+                          },
+                          ...(selectedProduct.sku
+                            ? [{
+                                code: selectedProduct.sku,
+                                codeType: 'sku' as const,
+                                isPrimary: false,
+                                isActive: true,
+                                order: 1,
+                              }]
+                            : []),
+                        ],
                       isActive: selectedProduct.isActive,
                     } : undefined}
                     onSubmit={handleSubmit}

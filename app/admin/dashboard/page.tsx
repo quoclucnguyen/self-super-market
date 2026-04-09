@@ -1,22 +1,39 @@
-import { db } from '@/lib/db';
-import { products, productCodes, productImages, activityLog } from '@/drizzle/schema';
-import { desc, asc, inArray, sql, lt, and, gte, eq } from 'drizzle-orm';
-import { DashboardKPICard } from '@/components/dashboard/DashboardKPICard';
-import { DashboardProductTable } from '@/components/dashboard/DashboardProductTable';
-import { LowStockAlerts } from '@/components/dashboard/LowStockAlerts';
-import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
-import { DashboardSearch, type DashboardFilters } from '@/components/dashboard/DashboardSearch';
-import { Package, AlertTriangle, BarCode3, TrendingUp, ClipboardCheck } from 'lucide-react';
+import { db } from "@/lib/db";
+import {
+  products,
+  productCodes,
+  productImages,
+  activityLog,
+} from "@/drizzle/schema";
+import { desc, asc, inArray, sql, lt, and, gte, eq } from "drizzle-orm";
+import { DashboardKPICard } from "@/components/dashboard/DashboardKPICard";
+import { DashboardProductTable } from "@/components/dashboard/DashboardProductTable";
+import { LowStockAlerts } from "@/components/dashboard/LowStockAlerts";
+import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { DashboardSearch } from "@/components/dashboard/DashboardSearch";
+import Link from "next/link";
+import {
+  Package,
+  AlertTriangle,
+  Barcode,
+  TrendingUp,
+  ClipboardCheck,
+} from "lucide-react";
 
 interface DashboardSearchParams {
   search?: string;
   category?: string;
-  stockStatus?: 'in-stock' | 'low-stock' | 'out-of-stock';
-  sortBy?: 'recent' | 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
+  stockStatus?: "in-stock" | "low-stock" | "out-of-stock";
+  sortBy?: "recent" | "name-asc" | "name-desc" | "price-asc" | "price-desc";
 }
 
 async function getDashboardData(searchParams: DashboardSearchParams) {
-  const { search = '', category = '', stockStatus = 'all', sortBy = 'recent' } = searchParams;
+  const {
+    search = "",
+    category = "",
+    stockStatus = "all",
+    sortBy = "recent",
+  } = searchParams;
 
   // Build search conditions
   const conditions: Array<ReturnType<typeof sql>> = [];
@@ -38,14 +55,16 @@ async function getDashboardData(searchParams: DashboardSearchParams) {
   }
 
   if (category) {
-    conditions.push(sql`${products.category} ILIKE ${'%' + category + '%'}`);
+    conditions.push(sql`${products.category} ILIKE ${"%" + category + "%"}`);
   }
 
-  if (stockStatus === 'in-stock') {
+  if (stockStatus === "in-stock") {
     conditions.push(sql`${products.stockQuantity} > 10`);
-  } else if (stockStatus === 'low-stock') {
-    conditions.push(sql`${products.stockQuantity} <= 10 AND ${products.stockQuantity} > 0`);
-  } else if (stockStatus === 'out-of-stock') {
+  } else if (stockStatus === "low-stock") {
+    conditions.push(
+      sql`${products.stockQuantity} <= 10 AND ${products.stockQuantity} > 0`,
+    );
+  } else if (stockStatus === "out-of-stock") {
     conditions.push(sql`${products.stockQuantity} = 0`);
   }
 
@@ -53,10 +72,12 @@ async function getDashboardData(searchParams: DashboardSearchParams) {
 
   // Build sort condition
   let orderByClause = desc(products.createdAt);
-  if (sortBy === 'name-asc') orderByClause = asc(products.name);
-  else if (sortBy === 'name-desc') orderByClause = desc(products.name);
-  else if (sortBy === 'price-asc') orderByClause = asc(sql`CAST(${products.price} AS NUMERIC)`);
-  else if (sortBy === 'price-desc') orderByClause = desc(sql`CAST(${products.price} AS NUMERIC)`);
+  if (sortBy === "name-asc") orderByClause = asc(products.name);
+  else if (sortBy === "name-desc") orderByClause = desc(products.name);
+  else if (sortBy === "price-asc")
+    orderByClause = asc(sql`CAST(${products.price} AS NUMERIC)`);
+  else if (sortBy === "price-desc")
+    orderByClause = desc(sql`CAST(${products.price} AS NUMERIC)`);
 
   // Get total counts for KPIs
   const [kpiData] = await db
@@ -112,7 +133,8 @@ async function getDashboardData(searchParams: DashboardSearchParams) {
 
   const productsWithDetails = filteredProducts.map((product) => {
     const images = imageMap.get(product.id) ?? [];
-    const primaryImage = images.find((img) => img.isPrimary) ?? images[0] ?? null;
+    const primaryImage =
+      images.find((img) => img.isPrimary) ?? images[0] ?? null;
     const codes = codeMap.get(product.id) ?? [];
 
     return {
@@ -141,7 +163,10 @@ async function getDashboardData(searchParams: DashboardSearchParams) {
         .orderBy(asc(productImages.order))
     : [];
 
-  const lowStockImageMap = new Map<number, Array<typeof productImages.$inferSelect>>();
+  const lowStockImageMap = new Map<
+    number,
+    Array<typeof productImages.$inferSelect>
+  >();
   lowStockImages.forEach((image) => {
     const current = lowStockImageMap.get(image.productId) ?? [];
     current.push(image);
@@ -150,7 +175,8 @@ async function getDashboardData(searchParams: DashboardSearchParams) {
 
   const lowStockAlerts = lowStockProducts.map((product) => {
     const images = lowStockImageMap.get(product.id) ?? [];
-    const primaryImage = images.find((img) => img.isPrimary) ?? images[0] ?? null;
+    const primaryImage =
+      images.find((img) => img.isPrimary) ?? images[0] ?? null;
 
     return {
       productId: product.id,
@@ -184,7 +210,9 @@ async function getDashboardData(searchParams: DashboardSearchParams) {
     products: productsWithDetails,
     lowStockAlerts,
     activities: recentActivities,
-    categories: allCategories.map((c) => c.category).filter((c): c is string => Boolean(c)),
+    categories: allCategories
+      .map((c) => c.category)
+      .filter((c): c is string => Boolean(c)),
   };
 }
 
@@ -194,7 +222,8 @@ export default async function DashboardPage({
   searchParams: Promise<DashboardSearchParams>;
 }) {
   const params = await searchParams;
-  const { kpis, products, lowStockAlerts, activities, categories } = await getDashboardData(params);
+  const { kpis, products, lowStockAlerts, activities, categories } =
+    await getDashboardData(params);
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8">
@@ -222,7 +251,7 @@ export default async function DashboardPage({
         <DashboardKPICard
           value={kpis.totalCodes}
           label="Total SKUs/Barcodes"
-          icon={BarCode3}
+          icon={Barcode}
           color="green"
           trend="up"
           trendValue="+8% this week"
@@ -248,20 +277,23 @@ export default async function DashboardPage({
       {/* Search and Filters */}
       <DashboardSearch
         filters={{
-          search: params.search || '',
-          category: params.category || '',
-          stockStatus: params.stockStatus || 'all',
-          sortBy: params.sortBy || 'recent',
+          search: params.search || "",
+          category: params.category || "",
+          stockStatus: params.stockStatus || "all",
+          sortBy: params.sortBy || "recent",
         }}
         onFiltersChange={(newFilters) => {
           const url = new URL(window.location.href);
-          url.searchParams.set('search', newFilters.search);
-          if (newFilters.category) url.searchParams.set('category', newFilters.category);
-          else url.searchParams.delete('category');
-          if (newFilters.stockStatus !== 'all') url.searchParams.set('stockStatus', newFilters.stockStatus);
-          else url.searchParams.delete('stockStatus');
-          if (newFilters.sortBy !== 'recent') url.searchParams.set('sortBy', newFilters.sortBy);
-          else url.searchParams.delete('sortBy');
+          url.searchParams.set("search", newFilters.search);
+          if (newFilters.category)
+            url.searchParams.set("category", newFilters.category);
+          else url.searchParams.delete("category");
+          if (newFilters.stockStatus !== "all")
+            url.searchParams.set("stockStatus", newFilters.stockStatus);
+          else url.searchParams.delete("stockStatus");
+          if (newFilters.sortBy !== "recent")
+            url.searchParams.set("sortBy", newFilters.sortBy);
+          else url.searchParams.delete("sortBy");
           window.location.href = url.toString();
         }}
         categories={categories}
@@ -292,12 +324,12 @@ export default async function DashboardPage({
           Quick Actions
         </h3>
         <div className="flex flex-wrap gap-3">
-          <a
+          <Link
             href="/admin/products/new"
             className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
           >
             + Add Product
-          </a>
+          </Link>
           <button className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-sm font-medium transition-colors">
             + Bulk Import
           </button>

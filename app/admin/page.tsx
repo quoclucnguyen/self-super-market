@@ -1,6 +1,6 @@
 import { AdminPageClient } from '@/components/admin/AdminPageClient';
 import { db } from '@/lib/db';
-import { brands, categories, products, productImages } from '@/drizzle/schema';
+import { brands, categories, products, productCodes, productImages } from '@/drizzle/schema';
 import { and, asc, desc, inArray, sql } from 'drizzle-orm';
 
 async function getProducts(searchParams: Awaited<Promise<{ search?: string; category?: string; page?: string }>>) {
@@ -62,6 +62,14 @@ async function getProducts(searchParams: Awaited<Promise<{ search?: string; cate
         .orderBy(asc(productImages.productId), asc(productImages.order), asc(productImages.id))
     : [];
 
+  const codeRows = productIds.length
+    ? await db
+        .select()
+        .from(productCodes)
+        .where(inArray(productCodes.productId, productIds))
+        .orderBy(asc(productCodes.productId), asc(productCodes.order), asc(productCodes.id))
+    : [];
+
   const imageMap = new Map<number, Array<typeof productImages.$inferSelect>>();
   imageRows.forEach((image) => {
     const current = imageMap.get(image.productId) ?? [];
@@ -69,13 +77,34 @@ async function getProducts(searchParams: Awaited<Promise<{ search?: string; cate
     imageMap.set(image.productId, current);
   });
 
+  const codeMap = new Map<number, Array<typeof productCodes.$inferSelect>>();
+  codeRows.forEach((code) => {
+    const current = codeMap.get(code.productId) ?? [];
+    current.push(code);
+    codeMap.set(code.productId, current);
+  });
+
   const productsWithImages = productList.map((row) => {
     const product = row.product;
     const images = imageMap.get(product.id) ?? [];
+    const codes = codeMap.get(product.id) ?? [];
+    const activeCodes = codes.filter((code) => code.isActive);
     const primary = images.find((image) => image.isPrimary) ?? images[0] ?? null;
+    const barcodeCode =
+      activeCodes.find((code) => code.codeType === 'barcode' && code.isPrimary)
+      ?? activeCodes.find((code) => code.codeType === 'barcode')
+      ?? activeCodes.find((code) => code.isPrimary)
+      ?? activeCodes[0]
+      ?? null;
+    const skuCode =
+      activeCodes.find((code) => code.codeType === 'sku' && code.isPrimary)
+      ?? activeCodes.find((code) => code.codeType === 'sku')
+      ?? null;
 
     return {
       ...product,
+      barcode: barcodeCode?.code ?? '',
+      sku: skuCode?.code ?? null,
       imageUrl: primary?.imageUrl ?? product.imageUrl,
       imagePublicId: primary?.imagePublicId ?? product.imagePublicId,
       images,

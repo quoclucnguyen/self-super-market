@@ -1,19 +1,13 @@
-import { db } from '@/lib/db';
-import { products } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { getDetailedProductById } from '@/app/api/products/helpers';
 import { notFound, redirect } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 async function getProduct(id: string) {
-  const [product] = await db
-    .select()
-    .from(products)
-    .where(eq(products.id, parseInt(id)))
-    .limit(1);
-
-  return product;
+  const productId = Number.parseInt(id, 10);
+  if (Number.isNaN(productId)) return null;
+  return getDetailedProductById(productId);
 }
 
 export default async function DeleteProductPage({
@@ -27,6 +21,14 @@ export default async function DeleteProductPage({
   if (!product) {
     notFound();
   }
+
+  const activeCodes = product.codes.filter((code) => code.isActive);
+  const barcode =
+    activeCodes.find((code) => code.codeType === 'barcode' && code.isPrimary)?.code
+    ?? activeCodes.find((code) => code.codeType === 'barcode')?.code
+    ?? activeCodes.find((code) => code.isPrimary)?.code
+    ?? activeCodes[0]?.code
+    ?? 'N/A';
 
   async function deleteProduct() {
     'use server';
@@ -91,8 +93,8 @@ export default async function DeleteProductPage({
             </div>
             <div>
               <dt className="text-muted-foreground">Barcode</dt>
-              <dd className="font-mono text-foreground truncate" title={product.barcode}>
-                {product.barcode}
+              <dd className="font-mono text-foreground truncate" title={barcode}>
+                {barcode}
               </dd>
             </div>
             <div>

@@ -5,7 +5,7 @@ import {
   Trash2,
   Upload,
   Tag,
-  Brand,
+  Badge,
   Clock
 } from 'lucide-react';
 
@@ -24,7 +24,7 @@ const activityIcons = {
   product_deleted: Trash2,
   product_imported: Upload,
   category_created: Tag,
-  brand_created: Brand,
+  brand_created: Badge,
 };
 
 const activityColors = {

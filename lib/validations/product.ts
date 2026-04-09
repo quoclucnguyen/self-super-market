@@ -10,7 +10,7 @@ export const productImageSchema = z.object({
 export const productCodeSchema = z.object({
   id: z.number().int().positive().optional(),
   code: z.string().min(1, 'Code is required').max(100, 'Code too long').trim(),
-  codeType: z.enum(['barcode', 'sku'], { required_error: 'Code type required' }),
+  codeType: z.enum(['barcode', 'sku'], { message: 'Code type required' }),
   isPrimary: z.boolean().optional().default(false),
   isActive: z.boolean().optional().default(true),
   order: z.coerce.number().int().min(0).optional(),

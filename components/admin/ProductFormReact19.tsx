@@ -30,15 +30,24 @@ export function ProductFormReact19({
   submitAction,
   submitLabel = 'Save Product',
 }: ProductFormReact19Props) {
+  const initialBarcode =
+    initialData?.codes?.find((code) => code.codeType === 'barcode' && code.isPrimary)?.code
+    ?? initialData?.codes?.find((code) => code.codeType === 'barcode')?.code
+    ?? '';
+
   const [state, formAction, isPending] = useActionState(
     async (_: { error?: string; success?: boolean } | null, formData: FormData) => {
       const rawPrice = formData.get('price');
       const normalizedPrice = typeof rawPrice === 'string' ? rawPrice.trim() : '';
+      const rawBarcode = formData.get('barcode');
+      const barcode = typeof rawBarcode === 'string' ? rawBarcode.trim() : '';
 
       // Client-side validation using Zod
       const data: ProductInput = {
         name: formData.get('name') as string,
-        barcode: formData.get('barcode') as string,
+        codes: barcode
+          ? [{ code: barcode, codeType: 'barcode', isPrimary: true, isActive: true, order: 0 }]
+          : undefined,
         price: normalizedPrice ? parseFloat(normalizedPrice) : undefined,
         unit: (formData.get('unit') as string) || 'Cái',
         description: formData.get('description') as string || '',
@@ -126,7 +135,7 @@ export function ProductFormReact19({
           type="text"
           id="barcode"
           name="barcode"
-          defaultValue={initialData?.barcode || ''}
+          defaultValue={initialBarcode}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600"
           placeholder="Enter barcode (e.g., 1234567890123)"
         />
