@@ -82,7 +82,7 @@ export function ProductList({
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     {product.imageUrl && (
-                      <div className="flex-shrink-0 h-10 w-10">
+                      <div className="shrink-0 h-10 w-10">
                         <Image
                           className="h-10 w-10 rounded object-cover"
                           src={product.imageUrl}

@@ -226,37 +226,77 @@ Rules:
 
 ### 3) Map to API payload (`ProductCreate` shape)
 
-Map each finalized item to:
+Map each finalized item to `ProductCreate`-compatible payload.
+
+Required by OpenAPI (`POST /api/products`):
+- `name`
+- `barcode`
+- `unit`
+- at least one of `categoryId` or `categoryName`
+
+Recommended practical payload (compatible with current API behavior):
 
 ```json
 {
   "name": "string",
   "barcode": "string",
+  "unit": "string",
+  "categoryName": "string",
+  "codes": [
+    {
+      "code": "string",
+      "codeType": "barcode",
+      "isPrimary": true,
+      "isActive": true
+    }
+  ],
   "price": 0,
+  "brandName": "string | null",
+  "weightVolume": "string | null",
+  "origin": "string | null",
   "description": "string | null",
-  "category": "string | null",
   "stockQuantity": 0,
+  "images": [
+    {
+      "imageUrl": "string",
+      "imagePublicId": "string",
+      "isPrimary": true,
+      "order": 0
+    }
+  ],
   "imageUrl": "string | null",
-  "imagePublicId": "string | null"
+  "imagePublicId": "string | null",
+  "isActive": true
 }
 ```
+
+Notes:
+- Keep `barcode` for OpenAPI compatibility.
+- Also provide `codes[]` with a primary `barcode` code so `GET /api/products/barcode/{barcode}` upsert lookup remains reliable.
+- `price` is optional, but if present must be `> 0` and `<= 1_000_000`.
+- `stockQuantity` must be integer `>= 0`.
 
 Mapping for **catalog enrichment mode**:
 - `name`: enriched `normalizedName`
 - `barcode`: verified barcode if possible, else OCR barcode with lower confidence
-- `price`: optional; may use OCR price only if it looks sane, otherwise `0` or existing price strategy depending on API rules
+- `unit`: choose best inferred unit (`"Cái"` fallback for packaged items)
+- `categoryName` (or `categoryId`): enriched category (required by API)
+- `codes[]`: include primary barcode entry mirroring `barcode`
+- `price`: optional; if unknown, omit instead of forcing invalid value
 - `stockQuantity`: optional/default; do not block import just because receipt quantity is noisy
-- `description`, `category`: enriched if available
-- `imageUrl`: enriched product image if available
-- `imagePublicId`: `null` unless another upload pipeline fills it later
+- `brandName`, `description`, `weightVolume`, `origin`: enriched if available
+- `images[]` or `imageUrl`/`imagePublicId`: use enriched canonical image when available
 
 Mapping for **stock import mode**:
 - `name`: normalized OCR/enriched item name
 - `barcode`: OCR/enriched value
-- `price`: `unitPrice` as number (`> 0`)
+- `unit`: infer from item type (for weighted items typically `Kg`; packaged items often `Cái`)
+- `categoryName` (or `categoryId`): must be present before create
+- `codes[]`: include primary barcode entry mirroring `barcode`
+- `price`: `unitPrice` as number (`> 0`) when available
 - `stockQuantity`: invoice quantity
-- `description`, `category`: enriched if available
-- `imageUrl`, `imagePublicId`: `null` for receipt import unless enrichment found a good canonical image
+- `brandName`, `description`, `weightVolume`, `origin`: enriched if available
+- `images[]` or `imageUrl`/`imagePublicId`: `null` for receipt import unless enrichment found a good canonical image
 
 ### 4) Upsert via Self Super Market API
 
@@ -269,11 +309,31 @@ Per product:
 2. If exists:
    - `newStock = existing.stockQuantity + importedQuantity`
    - `PUT /api/products/{id}`
-   - include `id` in body
+   - send `ProductUpdate` fields in body (path param already carries `id`)
 3. If not found:
-   - `POST /api/products`
+   - `POST /api/products` with required create fields (`name`, `barcode`, `unit`, `categoryId|categoryName`)
 
-### 5) Automatic write policy
+Implementation note:
+- Barcode lookup endpoint is backed by product codes.
+- To keep upsert stable, include `codes[]` with a primary `barcode` code when creating/updating products.
+
+### 5) Preflight checklist for `POST /api/products` (cần chuẩn bị)
+
+Before create calls, prepare and validate at least:
+1. `name` (non-empty, max 200)
+2. `barcode` (non-empty, max 50)
+3. `unit` (non-empty, max 20)
+4. `categoryId` or `categoryName` (at least one)
+5. `codes[]` containing a primary barcode entry matching `barcode` (recommended for reliable lookup/upsert)
+
+Recommended additional fields when available:
+- `price` (`> 0`, `<= 1_000_000`)
+- `stockQuantity` (`>= 0`)
+- `brandName`/`brandId`
+- `description`, `weightVolume`, `origin`
+- `images[]` (or `imageUrl` + `imagePublicId`)
+
+### 6) Automatic write policy
 
 Before POST/PUT, show preview grouped into at least:
 - catalog-ready confident items
@@ -316,24 +376,31 @@ curl -sS -X POST "${SELF_SUPER_MARKET_API_BASE_URL:-https://self-super-market.ve
   -d '{
     "name":"...",
     "barcode":"...",
+    "unit":"Cái",
+    "categoryName":"Đồ uống",
+    "codes":[
+      {"code":"...","codeType":"barcode","isPrimary":true,"isActive":true}
+    ],
     "price":12345,
+    "brandName":"...",
     "description":"...",
-    "category":"...",
     "stockQuantity":10,
     "imageUrl":null,
     "imagePublicId":null
   }'
 
-# 3) Update product (include id in body)
+# 3) Update product (path param carries id)
 curl -sS -X PUT "${SELF_SUPER_MARKET_API_BASE_URL:-https://self-super-market.vercel.app}/api/products/${ID}" \
   -H "Content-Type: application/json" \
   -d '{
-    "id":123,
     "name":"...",
-    "barcode":"...",
+    "unit":"Cái",
+    "categoryName":"Đồ uống",
+    "codes":[
+      {"code":"...","codeType":"barcode","isPrimary":true,"isActive":true}
+    ],
     "price":12345,
     "description":"...",
-    "category":"...",
     "stockQuantity":25
   }'
 ```
@@ -344,6 +411,15 @@ curl -sS -X PUT "${SELF_SUPER_MARKET_API_BASE_URL:-https://self-super-market.ver
 - OCR is partially usable on long receipts -> continue with auto-segmentation + partial automatic output instead of immediately giving up.
 - Enrichment fails -> proceed with known fields and skip non-importable rows instead of blocking on confirmation.
 - API validation fails -> show failing field and ask user to correct.
+- Preflight validation for create/update should catch and skip rows with:
+  - missing `unit`
+  - missing both `categoryId` and `categoryName`
+  - invalid `price` (`<= 0` when present)
+  - invalid `stockQuantity` (`< 0`)
+- Handle common API 400s explicitly:
+  - `Category is required. Please provide categoryId or categoryName.`
+  - `Category does not exist. Please provide a valid category.`
+  - generic `Invalid input data` (inspect field-level details)
 - If OCR environment is missing dependencies, install/verify at least:
   - `python3-pil` / `Pillow`
   - `python3-opencv`

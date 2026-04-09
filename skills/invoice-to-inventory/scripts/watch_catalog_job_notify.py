@@ -12,9 +12,9 @@ def load_json(path: Path):
     return json.loads(path.read_text(encoding='utf-8'))
 
 
-def send_message(target: str, text: str):
+def send_message(cmd):
     subprocess.run(
-        target,
+        cmd,
         check=False,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
