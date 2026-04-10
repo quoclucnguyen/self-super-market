@@ -1,0 +1,700 @@
+/* ============================================
+   WINDOWS FORM CLASSIC STYLING
+   Inspired by Windows 2000/XP Forms
+   ============================================ */
+
+/* === ROOT VARIABLES === */
+:root {
+  /* Windows Classic Colors */
+  --win-gray-light: #ECE9D8;
+  --win-gray: #D4D0C8;
+  --win-gray-dark: #A0A0A0;
+  --win-blue-dark: #0054E3;
+  --win-blue-light: #4A90E2;
+  --win-blue-gradient-start: #0058EE;
+  --win-blue-gradient-end: #3593FF;
+  --win-white: #FFFFFF;
+  --win-black: #000000;
+
+  /* Border Colors */
+  --win-border-light: #FFFFFF;
+  --win-border-shadow: #808080;
+  --win-border-dark: #404040;
+
+  /* System Colors */
+  --win-highlight: #316AC5;
+  --win-highlight-text: #FFFFFF;
+
+  /* Fonts */
+  --win-font-ui: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --win-font-small: 11px;
+}
+
+/* === BASE STYLES === */
+.wf-root {
+  font-family: var(--win-font-ui);
+  font-size: var(--win-font-small);
+  background-color: var(--win-gray-light);
+  color: var(--win-black);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === 3D BORDER UTILITIES === */
+
+/* Outset (Nổi lên) - cho buttons, panels */
+.wf-border-outset {
+  border: 1px solid var(--win-border-shadow);
+  box-shadow:
+    inset 1px 1px 0 var(--win-border-light),
+    inset -1px -1px 0 var(--win-border-dark),
+    inset 2px 2px 0 var(--win-gray-light),
+    inset -2px -2px 0 var(--win-gray-dark);
+}
+
+/* Inset (Ấn xuống) - cho textboxes, panels */
+.wf-border-inset {
+  border: 1px solid var(--win-border-shadow);
+  box-shadow:
+    inset 1px 1px 0 var(--win-border-dark),
+    inset -1px -1px 0 var(--win-border-light),
+    inset 2px 2px 0 var(--win-gray-dark),
+    inset -2px -2px 0 var(--win-gray-light);
+}
+
+/* Simple outset */
+.wf-outset-simple {
+  border: 1px solid var(--win-border-shadow);
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-gray-dark);
+}
+
+/* Simple inset */
+.wf-inset-simple {
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white);
+}
+
+/* === TITLE BAR === */
+.wf-titlebar {
+  background: linear-gradient(
+    180deg,
+    var(--win-blue-gradient-start) 0%,
+    var(--win-blue-gradient-end) 100%
+  );
+  border: 1px solid var(--win-blue-dark);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+.wf-titlebar-inactive {
+  background: linear-gradient(
+    180deg,
+    #7A96DF 0%,
+    #A5BCE3 100%
+  );
+  border: 1px solid #6B7DB5;
+}
+
+/* === BUTTONS === */
+.wf-button {
+  font-family: var(--win-font-ui);
+  font-size: 11px;
+  padding: 4px 12px;
+  min-height: 23px;
+  background-color: var(--win-gray-light);
+  border: 1px solid var(--win-border-shadow);
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-gray-dark);
+  cursor: pointer;
+  transition: none;
+}
+
+.wf-button:hover {
+  background-color: #E5E1D8;
+}
+
+.wf-button:active {
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white);
+  background-color: #D4D0C8;
+  padding: 5px 11px 3px 13px;
+}
+
+.wf-button-primary {
+  background-color: var(--win-gray-light);
+}
+
+.wf-button-primary:hover {
+  background-color: #E5E1D8;
+}
+
+/* === INPUT FIELDS === */
+.wf-input {
+  font-family: var(--win-font-ui);
+  font-size: 11px;
+  padding: 3px 4px;
+  min-height: 21px;
+  background-color: var(--win-white);
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white);
+}
+
+.wf-input:focus {
+  outline: none;
+  border-color: var(--win-highlight);
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white),
+    0 0 0 1px var(--win-highlight);
+}
+
+.wf-input::placeholder {
+  color: #808080;
+}
+
+/* === TEXTAREA === */
+.wf-textarea {
+  font-family: var(--win-font-ui);
+  font-size: 11px;
+  padding: 4px;
+  background-color: var(--win-white);
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white);
+  resize: vertical;
+}
+
+/* === GROUP BOX === */
+.wf-groupbox {
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-gray-dark);
+  padding: 16px;
+  position: relative;
+}
+
+.wf-groupbox-title {
+  position: absolute;
+  top: -6px;
+  left: 12px;
+  background-color: var(--win-gray-light);
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: normal;
+}
+
+/* GroupBox inside white panels needs white title background */
+.wf-panel-white .wf-groupbox-title,
+.wf-tab-content .wf-groupbox-title {
+  background-color: var(--win-white);
+}
+
+/* === TAB CONTROL === */
+.wf-tabs {
+  background-color: var(--win-gray-light);
+  padding: 4px 4px 0 4px;
+}
+
+.wf-tab-list {
+  display: flex;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.wf-tab-item {
+  position: relative;
+  padding: 4px 12px;
+  margin-right: -1px;
+  background-color: var(--win-gray-light);
+  border: 1px solid var(--win-gray-dark);
+  border-bottom: none;
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-gray-dark);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.wf-tab-item[data-state="active"] {
+  background-color: var(--win-white);
+  z-index: 1;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--win-white);
+}
+
+.wf-tab-content {
+  background-color: var(--win-white);
+  padding: 12px;
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white);
+  margin-top: -1px;
+}
+
+/* === SELECT / DROPDOWN === */
+.wf-select {
+  font-family: var(--win-font-ui);
+  font-size: 11px;
+  padding: 2px 4px;
+  min-height: 21px;
+  background-color: var(--win-white);
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000000' d='M2 4l4 4 4-4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  padding-right: 20px;
+}
+
+.wf-select:focus {
+  outline: none;
+  border-color: var(--win-highlight);
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white),
+    0 0 0 1px var(--win-highlight);
+}
+
+/* === LABEL === */
+.wf-label {
+  font-size: 11px;
+  font-weight: normal;
+}
+
+.wf-label-required::after {
+  content: ' *';
+  color: #CC0000;
+}
+
+/* === CHECKBOX === */
+.wf-checkbox {
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  background-color: var(--win-white);
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white);
+  cursor: pointer;
+  position: relative;
+}
+
+.wf-checkbox:checked {
+  background-color: var(--win-white);
+}
+
+.wf-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0px;
+  width: 2px;
+  height: 7px;
+  background-color: var(--win-black);
+  transform: rotate(45deg);
+  box-shadow:
+    2px 0 0 var(--win-black),
+    4px -4px 0 var(--win-black);
+}
+
+/* === RADIO BUTTON === */
+.wf-radio {
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  background-color: var(--win-white);
+  border: 1px solid var(--win-gray-dark);
+  border-radius: 50%;
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white);
+  cursor: pointer;
+  position: relative;
+}
+
+.wf-radio:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 5px;
+  height: 5px;
+  background-color: var(--win-black);
+  border-radius: 50%;
+}
+
+/* === PROGRESS BAR === */
+.wf-progress {
+  height: 20px;
+  background-color: var(--win-white);
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white);
+  overflow: hidden;
+}
+
+.wf-progress-bar {
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    var(--win-blue-gradient-start) 0%,
+    var(--win-blue-gradient-end) 100%
+  );
+  transition: width 0.3s ease;
+}
+
+/* === SCROLLBAR === */
+.wf-scroll::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+.wf-scroll::-webkit-scrollbar-track {
+  background-color: var(--win-gray-light);
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white);
+}
+
+.wf-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--win-gray-light);
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-gray-dark);
+}
+
+.wf-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #E5E1D8;
+}
+
+.wf-scroll::-webkit-scrollbar-button {
+  background-color: var(--win-gray-light);
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-gray-dark);
+}
+
+.wf-scroll::-webkit-scrollbar-corner {
+  background-color: var(--win-gray-light);
+}
+
+/* === LIST ITEM / TABLE ROW === */
+.wf-list-item {
+  padding: 6px 8px;
+  border-bottom: 1px solid #E0E0E0;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.wf-list-item:hover {
+  background-color: #E8F4FF;
+}
+
+.wf-list-item-selected {
+  background-color: var(--win-highlight);
+  color: var(--win-highlight-text);
+}
+
+/* === STATUS BAR === */
+.wf-statusbar {
+  background-color: var(--win-gray-light);
+  border-top: 1px solid var(--win-white);
+  box-shadow:
+    inset 0 1px 0 var(--win-gray-dark),
+    inset 0 -1px 0 var(--win-white);
+  padding: 2px 4px;
+  font-size: 11px;
+}
+
+/* === MENU BAR === */
+.wf-menubar {
+  background-color: var(--win-gray-light);
+  border-bottom: 1px solid var(--win-white);
+  box-shadow:
+    inset 0 -1px 0 var(--win-gray-dark),
+    inset 0 1px 0 var(--win-white);
+  padding: 2px 0;
+}
+
+.wf-menu-item {
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.wf-menu-item:hover {
+  background-color: var(--win-highlight);
+  color: var(--win-white);
+}
+
+/* === TOOLBAR === */
+.wf-toolbar {
+  background-color: var(--win-gray-light);
+  border-bottom: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 0 1px 0 var(--win-white),
+    inset 0 -1px 0 var(--win-gray-dark);
+  padding: 2px;
+}
+
+.wf-toolbar-separator {
+  width: 1px;
+  background-color: var(--win-gray-dark);
+  box-shadow:
+    inset 1px 0 0 var(--win-white);
+  margin: 2px 4px;
+}
+
+/* === PANEL === */
+.wf-panel {
+  background-color: var(--win-gray-light);
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-gray-dark);
+}
+
+.wf-panel-white {
+  background-color: var(--win-white);
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white);
+}
+
+/* === TREEVIEW === */
+.wf-tree-item {
+  padding: 2px 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wf-tree-item:hover {
+  background-color: #E8F4FF;
+}
+
+.wf-tree-item-selected {
+  background-color: var(--win-highlight);
+  color: var(--win-white);
+}
+
+/* === SPLITTER === */
+.wf-splitter {
+  background-color: var(--win-gray-light);
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 0 0 var(--win-white),
+    inset -1px 0 0 var(--win-gray-dark);
+}
+
+/* === TOOLTIP === */
+.wf-tooltip {
+  background-color: #FFFFE1;
+  border: 1px solid var(--win-black);
+  box-shadow:
+    1px 1px 0 var(--win-gray-dark),
+    2px 2px 0 rgba(0, 0, 0, 0.2);
+  padding: 2px 4px;
+  font-size: 11px;
+  max-width: 200px;
+}
+
+/* === LINK === */
+.wf-link {
+  color: var(--win-blue-dark);
+  text-decoration: none;
+}
+
+.wf-link:hover {
+  text-decoration: underline;
+}
+
+.wf-link:visited {
+  color: #800080;
+}
+
+/* === UTILITY CLASSES === */
+
+/* Windows gray background */
+.wf-bg {
+  background-color: var(--win-gray-light);
+}
+
+/* Windows panel background */
+.wf-bg-panel {
+  background-color: var(--win-white);
+}
+
+/* Text colors */
+.wf-text {
+  color: var(--win-black);
+}
+
+.wf-text-muted {
+  color: #808080;
+}
+
+/* Focus visible */
+.wf-focus-visible:focus-visible {
+  outline: 1px dotted var(--win-black);
+  outline-offset: 1px;
+}
+
+/* Disabled state */
+.wf-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wf-disabled:active {
+  padding: 4px 12px;
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-gray-dark);
+}
+
+/* === LOADING SPINNER === */
+@keyframes wf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.wf-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--win-gray-dark);
+  border-top-color: var(--win-blue-dark);
+  border-radius: 50%;
+  animation: wf-spin 0.8s linear infinite;
+}
+
+/* === ALERT / MESSAGE BOX === */
+.wf-messagebox {
+  background-color: var(--win-gray-light);
+  border: 2px solid var(--win-gray-dark);
+  box-shadow:
+    1px 1px 0 var(--win-white),
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-gray-dark);
+  padding: 16px;
+  min-width: 300px;
+}
+
+.wf-messagebox-info {
+  border-left: 4px solid var(--win-blue-dark);
+}
+
+.wf-messagebox-warning {
+  border-left: 4px solid #E6A23C;
+}
+
+.wf-messagebox-error {
+  border-left: 4px solid #F56C6C;
+}
+
+/* === DATA GRID === */
+.wf-datagrid {
+  background-color: var(--win-white);
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-dark),
+    inset -1px -1px 0 var(--win-white);
+}
+
+.wf-datagrid-header {
+  background: linear-gradient(
+    180deg,
+    #F5F5F5 0%,
+    #E5E5E5 100%
+  );
+  border-bottom: 1px solid var(--win-gray-dark);
+  padding: 4px 8px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.wf-datagrid-row {
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.wf-datagrid-row:hover {
+  background-color: #F5F5F5;
+}
+
+.wf-datagrid-cell {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+/* === BADGE === */
+.wf-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  font-size: 10px;
+  border: 1px solid var(--win-gray-dark);
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-gray-dark);
+}
+
+.wf-badge-success {
+  background-color: #90EE90;
+  color: #006400;
+}
+
+.wf-badge-warning {
+  background-color: #FFD700;
+  color: #8B4513;
+}
+
+.wf-badge-error {
+  background-color: #FFB6C1;
+  color: #8B0000;
+}
+
+.wf-badge-info {
+  background-color: #ADD8E6;
+  color: #00008B;
+}
+
+/* === RESPONSIVE ADJUSTMENTS === */
+@media (max-width: 768px) {
+  .wf-tab-item {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .wf-button {
+    padding: 4px 8px;
+    min-height: 21px;
+  }
+}

@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 
 interface SearchBarProps {
   categories?: string[];
@@ -62,21 +61,21 @@ export function SearchBar({
   }, [search, category, handleSearchChange]);
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3">
+    <div className="flex flex-col sm:flex-row gap-2">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-        <Input
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 wf-text-muted pointer-events-none" />
+        <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, barcode, or description..."
-          className="pl-10 h-10"
+          placeholder="Search by name, barcode..."
+          className="wf-input w-full pl-8"
         />
       </div>
       <select
         value={category}
         onChange={(e) => setCategory(e.target.value)}
-        className="px-4 py-2 h-10 rounded-md border border-input bg-background ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="wf-select min-w-[140px]"
       >
         <option value="">All Categories</option>
         {categories.map((cat) => (

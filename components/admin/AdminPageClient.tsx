@@ -220,41 +220,41 @@ export function AdminPageClient({
   }, [fetchProducts, searchParams]);
 
   return (
-    <div className="h-full min-h-0 flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="shrink-0 px-4 sm:px-6 py-4 bg-card border-b border-border">
+    <div className="h-full min-h-0 flex flex-col overflow-hidden wf-bg">
+      {/* Header - Windows Form Style */}
+      <div className="wf-panel shrink-0 px-3 py-2 mb-1 mx-1 mt-1">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
+            <h1 className="text-sm font-semibold wf-text">
               Products
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs wf-text-muted">
               {pagination.total} total
             </p>
           </div>
         </div>
 
         {/* Search Bar - Integrated in header */}
-        <div className="mt-3">
+        <div className="mt-2">
           <SearchBar categories={categories} onSearch={handleSearch} />
         </div>
       </div>
 
       {/* Split View Layout - Full Height */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-5 overflow-hidden">
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-5 overflow-hidden gap-1 px-1">
         {/* Left: Product List (2/5 width) */}
-        <div className="lg:col-span-2 flex flex-col min-w-0 min-h-0 bg-card border-r border-border overflow-hidden">
+        <div className="lg:col-span-2 flex flex-col min-w-0 min-h-0 wf-panel overflow-hidden">
           {/* List Header */}
-          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
-            <h2 className="font-semibold text-foreground text-sm">
+          <div className="wf-menubar shrink-0 flex items-center justify-between px-2 py-1">
+            <h2 className="wf-label">
               Products
             </h2>
             <button
               type="button"
               onClick={startCreate}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors min-h-[44px]"
+              className="wf-button wf-focus-visible"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3 h-3" />
               Add New
             </button>
           </div>
@@ -272,8 +272,8 @@ export function AdminPageClient({
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="shrink-0 flex items-center justify-between px-4 py-3 border-t border-border bg-muted/50">
-              <span className="text-xs text-muted-foreground">
+            <div className="wf-statusbar shrink-0 flex items-center justify-between px-2 py-1">
+              <span className="wf-text-muted">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
               <div className="flex items-center gap-1">
@@ -281,17 +281,17 @@ export function AdminPageClient({
                   type="button"
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page === 1}
-                  className="px-2.5 py-1 text-xs font-medium text-foreground bg-card border border-border rounded hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-11"
+                  className="wf-button wf-focus-visible disabled:wf-disabled !min-h-0 !py-1 !px-3"
                 >
-                  Previous
+                  &lt;
                 </button>
                 <button
                   type="button"
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={pagination.page === pagination.totalPages}
-                  className="px-2.5 py-1 text-xs font-medium text-foreground bg-card border border-border rounded hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-11"
+                  className="wf-button wf-focus-visible disabled:wf-disabled !min-h-0 !py-1 !px-3"
                 >
-                  Next
+                  &gt;
                 </button>
               </div>
             </div>
@@ -299,35 +299,35 @@ export function AdminPageClient({
         </div>
 
         {/* Right: Form Panel (3/5 width) */}
-        <div className="lg:col-span-3 flex flex-col min-w-0 min-h-0 bg-muted overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-6">
+        <div className="lg:col-span-3 flex flex-col min-w-0 min-h-0 wf-bg overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto px-2 py-2 wf-scroll">
             <div className="max-w-2xl mx-auto">
-              {/* Form Card */}
-              <div className="bg-card rounded-lg border border-border shadow-sm">
+              {/* Form Card - Windows Form Style */}
+              <div className="wf-panel-white">
                 {/* Form Header */}
-                <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-border bg-card rounded-t-lg">
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">
+                <div className="wf-menubar sticky top-0 z-10 flex items-center justify-between px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <h2 className="wf-label font-semibold">
                       {formMode === 'create' ? 'Add New Product' : 'Edit Product'}
                     </h2>
                     {isSubmitting && (
-                      <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                      <Loader2 className="w-4 h-4 wf-text animate-spin" />
                     )}
                   </div>
                   {selectedProduct && (
                     <button
                       type="button"
                       onClick={clearForm}
-                      className="p-1.5 rounded-lg hover:bg-accent transition-colors text-muted-foreground min-h-9 min-w-9 focus-visible:ring-2 focus-visible:ring-ring"
+                      className="wf-button wf-focus-visible !min-h-0 !py-0 !px-1"
                       aria-label="Clear form"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-3 h-3" />
                     </button>
                   )}
                 </div>
 
                 {/* Form Content */}
-                <div className="p-6">
+                <div className="p-3">
                   <ProductForm
                     key={selectedProduct?.id || 'new'}
                     initialData={selectedProduct ? {
@@ -428,20 +428,20 @@ function ProductListPanel({
 }: ProductListPanelProps) {
   const getStockBadgeClass = (quantity: number) => {
     if (quantity > 10) {
-      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800';
+      return 'wf-badge wf-badge-success';
     }
     if (quantity > 0) {
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800';
+      return 'wf-badge wf-badge-warning';
     }
-    return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800';
+    return 'wf-badge wf-badge-error';
   };
 
   if (isLoading && products.length === 0) {
     return (
       <div className="flex justify-center py-20">
-        <div className="inline-flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-sm">Loading…</span>
+        <div className="inline-flex items-center gap-2 wf-text-muted">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span className="text-xs">Loading…</span>
         </div>
       </div>
     );
@@ -450,13 +450,13 @@ function ProductListPanel({
   if (products.length === 0) {
     return (
       <div className="text-center py-20 px-4">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-3">
-          <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="wf-panel inline-flex items-center justify-center w-12 h-12 mb-3">
+          <svg className="w-6 h-6 wf-text" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
         </div>
-        <h3 className="text-sm font-semibold text-foreground mb-1">No products</h3>
-        <p className="text-xs text-muted-foreground">
+        <h3 className="wf-label font-semibold mb-1">No products</h3>
+        <p className="text-xs wf-text-muted">
           Add a new product to get started
         </p>
       </div>
@@ -464,46 +464,46 @@ function ProductListPanel({
   }
 
   return (
-    <div className="divide-y divide-border">
+    <div className="divide-y divide-gray-300">
       {products.map((product) => (
         <div
           key={product.id}
-          className={`group flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${
+          className={`wf-list-item group flex items-center gap-2 px-2 py-2 ${
             selectedProduct?.id === product.id
-              ? 'bg-primary/10 dark:bg-primary/20'
-              : 'hover:bg-accent'
+              ? 'wf-list-item-selected'
+              : ''
           }`}
           onClick={() => onSelect(product)}
         >
           {product.imageUrl ? (
-            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0">
+            <div className="wf-panel relative w-10 h-10 overflow-hidden shrink-0">
               <Image
                 src={product.imageUrl}
                 alt={product.name}
                 fill
                 className="object-cover"
-                sizes="48px"
+                sizes="40px"
               />
             </div>
           ) : (
-            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
-              <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-10 h-10 wf-panel flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5 wf-text" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-foreground truncate text-sm">
+            <h3 className="wf-label font-medium truncate">
               {product.name}
             </h3>
-            <p className="text-xs font-mono text-muted-foreground truncate">
+            <p className="text-xs font-mono wf-text-muted truncate">
               {product.barcode}
             </p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="font-semibold text-foreground text-xs">
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="wf-text text-xs">
                 ${parseFloat(product.price).toFixed(2)}
               </span>
-              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getStockBadgeClass(product.stockQuantity)}`}>
+              <span className={getStockBadgeClass(product.stockQuantity)}>
                 {product.stockQuantity}
               </span>
             </div>
@@ -514,10 +514,10 @@ function ProductListPanel({
               e.stopPropagation();
               onDelete(product);
             }}
-            className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 min-h-9 min-w-9 focus-visible:ring-2 focus-visible:ring-ring"
+            className="wf-button wf-focus-visible opacity-0 group-hover:opacity-100 !min-h-0 !py-0 !px-1"
             aria-label={`Delete ${product.name}`}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3 h-3" />
           </button>
         </div>
       ))}

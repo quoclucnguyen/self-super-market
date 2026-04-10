@@ -11,18 +11,8 @@ import {
   type ProductRawInput,
 } from '@/lib/validations/product';
 import { ProductImagesUpload } from './ProductImagesUpload';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { useState } from 'react';
 
 interface ProductFormProps {
   initialData?: Partial<ProductParsed>;
@@ -34,6 +24,14 @@ interface ProductFormProps {
   onCancel?: () => void;
 }
 
+const TABS = [
+  { id: 'general', label: 'General' },
+  { id: 'details', label: 'Details' },
+  { id: 'nutrition', label: 'Nutrition' },
+  { id: 'instructions', label: 'Instructions' },
+] as const;
+type TabId = (typeof TABS)[number]['id'];
+
 export function ProductForm({
   initialData,
   onSubmit,
@@ -44,6 +42,8 @@ export function ProductForm({
   onCancel,
 }: ProductFormProps) {
   void imagePriority;
+
+  const [activeTab, setActiveTab] = useState<TabId>('general');
 
   const initialImages =
     initialData?.images && initialData.images.length > 0
@@ -118,7 +118,7 @@ export function ProductForm({
     setValue('codes', newCodes, { shouldDirty: true, shouldValidate: true });
   };
 
-  const handleCodeChange = (index: number, field: keyof ProductCodeInput, value: any) => {
+  const handleCodeChange = (index: number, field: keyof ProductCodeInput, value: unknown) => {
     const newCodes = codes.map((code, i) => {
       if (i === index) {
         return { ...code, [field]: value };
@@ -140,349 +140,385 @@ export function ProductForm({
   };
 
   return (
-    <form onSubmit={handleSubmit((data) => onSubmit(data))} className="space-y-6">
-      {/* Product Codes Section */}
-      <div>
-        <div className="flex items-center justify-between">
-          <Label>Product Barcodes & SKUs</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleAddCode}
-          >
-            <Plus className="w-4 h-4 mr-1" />
-            Add Code
-          </Button>
-        </div>
-        <p className="text-sm text-muted-foreground mb-2">
-          Add one or more barcodes and SKU codes for this product
-        </p>
+    <form onSubmit={handleSubmit((data) => onSubmit(data))}>
+      {/* ── Tab Control ── */}
+      <div className="wf-tabs">
+        <ul className="wf-tab-list" role="tablist">
+          {TABS.map((tab) => (
+            <li
+              key={tab.id}
+              className="wf-tab-item"
+              data-state={activeTab === tab.id ? 'active' : 'inactive'}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </li>
+          ))}
+        </ul>
 
-        {codes.length === 0 && (
-          <p className="text-sm text-muted-foreground italic mb-2">
-            No codes added yet. Click "Add Code" to add at least one barcode.
-          </p>
-        )}
-
-        <div className="space-y-2 mt-2">
-          {codes.map((code, index) => (
-            <div key={index} className="flex gap-2 items-start">
-              <div className="flex-1 grid grid-cols-12 gap-2">
-                <div className="col-span-5">
-                  <Input
-                    value={code.code}
-                    onChange={(e) => handleCodeChange(index, 'code', e.target.value)}
-                    placeholder={code.codeType === 'barcode' ? 'Barcode (e.g., 1234567890123)' : 'SKU (e.g., BEV-COCA-330)'}
-                    autoComplete="off"
-                  />
-                </div>
-                <div className="col-span-3">
-                  <Select
-                    value={code.codeType}
-                    onValueChange={(value) => handleCodeChange(index, 'codeType', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="barcode">Barcode</SelectItem>
-                      <SelectItem value="sku">SKU</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-3 flex items-center gap-2">
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={code.isPrimary}
-                      onChange={() => handleCodeChange(index, 'isPrimary', true)}
-                      className="w-4 h-4"
-                      name={`primary-code-${codes.length}`}
-                    />
-                    <span className={code.isPrimary ? 'font-semibold text-blue-600 dark:text-blue-400' : ''}>
-                      Primary
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={code.isActive}
-                      onChange={(e) => handleCodeChange(index, 'isActive', e.target.checked)}
-                      className="w-4 h-4"
-                    />
-                    Active
-                  </label>
-                </div>
-                <div className="col-span-1">
-                  <Button
+        <div className="wf-tab-content" role="tabpanel">
+          {/* ── General Tab ── */}
+          {activeTab === 'general' && (
+            <div className="space-y-3">
+              {/* Product Codes */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="wf-label font-semibold">Product Codes</span>
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveCode(index)}
-                    disabled={codes.length === 1}
-                    className="h-10 w-10 p-0"
-                    aria-label={`Remove code ${index + 1}`}
+                    onClick={handleAddCode}
+                    className="wf-button wf-focus-visible inline-flex items-center gap-1"
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                    <Plus className="w-3 h-3" />
+                    Add Code
+                  </button>
+                </div>
+
+                <p className="wf-text-muted text-[11px] mb-2">
+                  Add barcodes and SKU codes for this product
+                </p>
+
+                {codes.length === 0 && (
+                  <p className="wf-text-muted text-[11px] italic">
+                    No codes added yet. Click &quot;Add Code&quot; to begin.
+                  </p>
+                )}
+
+                <div className="space-y-1">
+                  {codes.map((code, index) => (
+                    <div
+                      key={index}
+                      className="wf-datagrid-row flex items-center gap-1 px-1 py-1"
+                    >
+                      <input
+                        type="text"
+                        value={code.code}
+                        onChange={(e) => handleCodeChange(index, 'code', e.target.value)}
+                        placeholder={code.codeType === 'barcode' ? 'Barcode...' : 'SKU...'}
+                        className="wf-input flex-1"
+                        autoComplete="off"
+                      />
+                      <select
+                        value={code.codeType}
+                        onChange={(e) => handleCodeChange(index, 'codeType', e.target.value)}
+                        className="wf-select"
+                        style={{ minWidth: 80 }}
+                      >
+                        <option value="barcode">Barcode</option>
+                        <option value="sku">SKU</option>
+                      </select>
+                      <label className="inline-flex items-center gap-1 wf-label cursor-pointer shrink-0">
+                        <input
+                          type="radio"
+                          checked={code.isPrimary}
+                          onChange={() => handleCodeChange(index, 'isPrimary', true)}
+                          className="wf-radio"
+                          name="primary-code"
+                        />
+                        Pri.
+                      </label>
+                      <label className="inline-flex items-center gap-1 wf-label cursor-pointer shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={code.isActive}
+                          onChange={(e) => handleCodeChange(index, 'isActive', e.target.checked)}
+                          className="wf-checkbox"
+                        />
+                        Act.
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCode(index)}
+                        disabled={codes.length <= 1}
+                        className="wf-button wf-focus-visible disabled:wf-disabled"
+                        style={{ padding: '2px 4px', minHeight: 21 }}
+                        aria-label={`Remove code ${index + 1}`}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                {errors.codes && (
+                  <p className="text-red-700 text-[11px] mt-1" role="alert">
+                    {errors.codes.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Product Images */}
+              <div>
+                <span className="wf-label font-semibold">Product Images</span>
+                <div className="mt-1">
+                  <ProductImagesUpload value={images} onChange={handleImagesChange} />
+                </div>
+                {errors.images && (
+                  <p className="text-red-700 text-[11px] mt-1">{errors.images.message}</p>
+                )}
+              </div>
+
+              {/* Product Name */}
+              <div>
+                <label htmlFor="name" className="wf-label wf-label-required">
+                  Product Name
+                </label>
+                <input
+                  {...register('name')}
+                  id="name"
+                  placeholder="Enter product name"
+                  className="wf-input w-full mt-1"
+                />
+                {errors.name && (
+                  <p className="text-red-700 text-[11px] mt-1">{errors.name.message}</p>
+                )}
+              </div>
+
+              {/* Price / Unit / Stock */}
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label htmlFor="price" className="wf-label">Price (VND)</label>
+                  <input
+                    {...register('price', { valueAsNumber: true })}
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    className="wf-input w-full mt-1"
+                  />
+                  {errors.price && (
+                    <p className="text-red-700 text-[11px] mt-1">{errors.price.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="unit" className="wf-label wf-label-required">Unit</label>
+                  <input
+                    {...register('unit')}
+                    id="unit"
+                    placeholder="VD: Lon, Chai"
+                    className="wf-input w-full mt-1"
+                  />
+                  {errors.unit && (
+                    <p className="text-red-700 text-[11px] mt-1">{errors.unit.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="stockQuantity" className="wf-label">Stock</label>
+                  <input
+                    {...register('stockQuantity', { valueAsNumber: true })}
+                    id="stockQuantity"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    className="wf-input w-full mt-1"
+                  />
+                  {errors.stockQuantity && (
+                    <p className="text-red-700 text-[11px] mt-1">{errors.stockQuantity.message}</p>
+                  )}
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-        {errors.codes && (
-          <p className="text-destructive text-sm mt-1" role="alert">{errors.codes.message}</p>
-        )}
-      </div>
+          )}
 
-      {/* Image Upload */}
-      <div>
-        <Label>Product Images</Label>
-        <div className="mt-2">
-          <ProductImagesUpload value={images} onChange={handleImagesChange} />
-        </div>
-        {errors.images && (
-          <p className="text-destructive text-sm mt-1">{errors.images.message}</p>
-        )}
-      </div>
+          {/* ── Details Tab ── */}
+          {activeTab === 'details' && (
+            <div className="space-y-3">
+              {/* Category / Brand */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label htmlFor="categoryName" className="wf-label">Category</label>
+                  <input
+                    {...register('categoryName')}
+                    id="categoryName"
+                    placeholder="VD: Đồ uống"
+                    className="wf-input w-full mt-1"
+                  />
+                  {errors.categoryName && (
+                    <p className="text-red-700 text-[11px] mt-1">{errors.categoryName.message}</p>
+                  )}
+                </div>
 
-      {/* Name */}
-      <div>
-        <Label htmlFor="name">
-          Product Name <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          {...register('name')}
-          id="name"
-          placeholder="Enter product name"
-          className="mt-2"
-        />
-        {errors.name && (
-          <p className="text-destructive text-sm mt-1">{errors.name.message}</p>
-        )}
-      </div>
+                <div>
+                  <label htmlFor="brandName" className="wf-label">Brand</label>
+                  <input
+                    {...register('brandName')}
+                    id="brandName"
+                    placeholder="VD: Coca-Cola"
+                    className="wf-input w-full mt-1"
+                  />
+                  {errors.brandName && (
+                    <p className="text-red-700 text-[11px] mt-1">{errors.brandName.message}</p>
+                  )}
+                </div>
+              </div>
 
-      {/* Price and Stock Quantity */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Label htmlFor="price">Price (VND)</Label>
-          <Input
-            {...register('price', { valueAsNumber: true })}
-            id="price"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Để trống nếu chưa có giá"
-            className="mt-2"
-          />
-          {errors.price && (
-            <p className="text-destructive text-sm mt-1">{errors.price.message}</p>
+              {/* Weight / Origin */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label htmlFor="weightVolume" className="wf-label">Weight / Volume</label>
+                  <input
+                    {...register('weightVolume')}
+                    id="weightVolume"
+                    placeholder="VD: 330ml, 1.5kg"
+                    className="wf-input w-full mt-1"
+                  />
+                  {errors.weightVolume && (
+                    <p className="text-red-700 text-[11px] mt-1">{errors.weightVolume.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="origin" className="wf-label">Origin</label>
+                  <input
+                    {...register('origin')}
+                    id="origin"
+                    placeholder="VD: Việt Nam"
+                    className="wf-input w-full mt-1"
+                  />
+                  {errors.origin && (
+                    <p className="text-red-700 text-[11px] mt-1">{errors.origin.message}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Shelf Life */}
+              <div>
+                <label htmlFor="shelfLifeDays" className="wf-label">Shelf Life (days)</label>
+                <input
+                  {...register('shelfLifeDays', { valueAsNumber: true })}
+                  id="shelfLifeDays"
+                  type="number"
+                  min="0"
+                  placeholder="VD: 365"
+                  className="wf-input w-full mt-1"
+                />
+                {errors.shelfLifeDays && (
+                  <p className="text-red-700 text-[11px] mt-1">{errors.shelfLifeDays.message}</p>
+                )}
+              </div>
+
+              {/* Description */}
+              <div>
+                <label htmlFor="description" className="wf-label">Description</label>
+                <textarea
+                  {...register('description')}
+                  id="description"
+                  rows={4}
+                  placeholder="Enter product description"
+                  className="wf-textarea w-full mt-1"
+                />
+                {errors.description && (
+                  <p className="text-red-700 text-[11px] mt-1">{errors.description.message}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Nutrition Tab ── */}
+          {activeTab === 'nutrition' && (
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="ingredients" className="wf-label">Ingredients</label>
+                <textarea
+                  {...register('ingredients')}
+                  id="ingredients"
+                  rows={6}
+                  placeholder="Thành phần sản phẩm"
+                  className="wf-textarea w-full mt-1"
+                />
+                {errors.ingredients && (
+                  <p className="text-red-700 text-[11px] mt-1">{errors.ingredients.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="nutritionalInfo" className="wf-label">Nutritional Info</label>
+                <textarea
+                  {...register('nutritionalInfo')}
+                  id="nutritionalInfo"
+                  rows={6}
+                  placeholder="Thông tin dinh dưỡng"
+                  className="wf-textarea w-full mt-1"
+                />
+                {errors.nutritionalInfo && (
+                  <p className="text-red-700 text-[11px] mt-1">{errors.nutritionalInfo.message}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Instructions Tab ── */}
+          {activeTab === 'instructions' && (
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="usageInstructions" className="wf-label">Usage Instructions</label>
+                <textarea
+                  {...register('usageInstructions')}
+                  id="usageInstructions"
+                  rows={6}
+                  placeholder="Hướng dẫn sử dụng"
+                  className="wf-textarea w-full mt-1"
+                />
+                {errors.usageInstructions && (
+                  <p className="text-red-700 text-[11px] mt-1">{errors.usageInstructions.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="storageInstructions" className="wf-label">Storage Instructions</label>
+                <textarea
+                  {...register('storageInstructions')}
+                  id="storageInstructions"
+                  rows={6}
+                  placeholder="Hướng dẫn bảo quản"
+                  className="wf-textarea w-full mt-1"
+                />
+                {errors.storageInstructions && (
+                  <p className="text-red-700 text-[11px] mt-1">{errors.storageInstructions.message}</p>
+                )}
+              </div>
+            </div>
           )}
         </div>
-
-        <div>
-          <Label htmlFor="unit">
-            Unit <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            {...register('unit')}
-            id="unit"
-            placeholder="VD: Lon, Chai, Kg"
-            className="mt-2"
-          />
-          {errors.unit && <p className="text-destructive text-sm mt-1">{errors.unit.message}</p>}
-        </div>
-
-        <div>
-          <Label htmlFor="stockQuantity">Stock Quantity</Label>
-          <Input
-            {...register('stockQuantity', { valueAsNumber: true })}
-            id="stockQuantity"
-            type="number"
-            min="0"
-            placeholder="0"
-            className="mt-2"
-          />
-          {errors.stockQuantity && (
-            <p className="text-destructive text-sm mt-1">{errors.stockQuantity.message}</p>
-          )}
-        </div>
       </div>
 
-      {/* Category & Brand */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="categoryName">Category</Label>
-          <Input
-            {...register('categoryName')}
-            id="categoryName"
-            placeholder="VD: Đồ uống"
-            className="mt-2"
-          />
-          {errors.categoryName && (
-            <p className="text-destructive text-sm mt-1">{errors.categoryName.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="brandName">Brand</Label>
-          <Input
-            {...register('brandName')}
-            id="brandName"
-            placeholder="VD: Coca-Cola"
-            className="mt-2"
-          />
-          {errors.brandName && (
-            <p className="text-destructive text-sm mt-1">{errors.brandName.message}</p>
-          )}
-        </div>
+      {/* Hidden Fields */}
+      <div className="hidden" aria-hidden="true">
+        <input {...register('category')} />
+        <input {...register('imageUrl')} />
+        <input {...register('imagePublicId')} />
       </div>
 
-      {/* Product details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="weightVolume">Weight/Volume</Label>
-          <Input
-            {...register('weightVolume')}
-            id="weightVolume"
-            placeholder="VD: 330ml, 1.5kg"
-            className="mt-2"
-          />
-          {errors.weightVolume && (
-            <p className="text-destructive text-sm mt-1">{errors.weightVolume.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="origin">Origin</Label>
-          <Input
-            {...register('origin')}
-            id="origin"
-            placeholder="VD: Việt Nam"
-            className="mt-2"
-          />
-          {errors.origin && (
-            <p className="text-destructive text-sm mt-1">{errors.origin.message}</p>
-          )}
-        </div>
-
-        <div className="md:col-span-2">
-          <Label htmlFor="shelfLifeDays">Shelf life (days)</Label>
-          <Input
-            {...register('shelfLifeDays', { valueAsNumber: true })}
-            id="shelfLifeDays"
-            type="number"
-            min="0"
-            placeholder="VD: 365"
-            className="mt-2"
-          />
-          {errors.shelfLifeDays && (
-            <p className="text-destructive text-sm mt-1">{errors.shelfLifeDays.message}</p>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="ingredients">Ingredients</Label>
-        <Textarea
-          {...register('ingredients')}
-          id="ingredients"
-          rows={3}
-          placeholder="Thành phần sản phẩm"
-          className="mt-2"
-        />
-        {errors.ingredients && (
-          <p className="text-destructive text-sm mt-1">{errors.ingredients.message}</p>
-        )}
-      </div>
-
-      <div>
-        <Label htmlFor="nutritionalInfo">Nutritional info</Label>
-        <Textarea
-          {...register('nutritionalInfo')}
-          id="nutritionalInfo"
-          rows={3}
-          placeholder="Thông tin dinh dưỡng"
-          className="mt-2"
-        />
-        {errors.nutritionalInfo && (
-          <p className="text-destructive text-sm mt-1">{errors.nutritionalInfo.message}</p>
-        )}
-      </div>
-
-      <div>
-        <Label htmlFor="usageInstructions">Usage instructions</Label>
-        <Textarea
-          {...register('usageInstructions')}
-          id="usageInstructions"
-          rows={3}
-          placeholder="Hướng dẫn sử dụng"
-          className="mt-2"
-        />
-        {errors.usageInstructions && (
-          <p className="text-destructive text-sm mt-1">{errors.usageInstructions.message}</p>
-        )}
-      </div>
-
-      <div>
-        <Label htmlFor="storageInstructions">Storage instructions</Label>
-        <Textarea
-          {...register('storageInstructions')}
-          id="storageInstructions"
-          rows={3}
-          placeholder="Hướng dẫn bảo quản"
-          className="mt-2"
-        />
-        {errors.storageInstructions && (
-          <p className="text-destructive text-sm mt-1">{errors.storageInstructions.message}</p>
-        )}
-      </div>
-
-      {/* Description */}
-      <div>
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          {...register('description')}
-          id="description"
-          rows={3}
-          placeholder="Enter product description"
-          className="mt-2"
-        />
-        {errors.description && (
-          <p className="text-destructive text-sm mt-1">{errors.description.message}</p>
-        )}
-      </div>
-
-      <div className="hidden">
-        <Input {...register('category')} />
-        <Input {...register('imageUrl')} />
-        <Input {...register('imagePublicId')} />
-      </div>
-
-      {/* Submit Button */}
-      <div className="flex justify-end gap-3 pt-4">
+      {/* ── Action Buttons ── */}
+      <div className="flex items-center justify-end gap-2 pt-3 mt-3 border-t border-gray-300">
         {!hideCancelButton && (
-          <Button
+          <button
             type="button"
-            variant="outline"
             onClick={onCancel || (() => window.history.back())}
             disabled={isSubmitting}
+            className="wf-button wf-focus-visible disabled:wf-disabled"
           >
             Cancel
-          </Button>
+          </button>
         )}
-        <Button
+        <button
           type="submit"
           disabled={isSubmitting}
+          className="wf-button wf-button-primary wf-focus-visible disabled:wf-disabled inline-flex items-center gap-1"
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Saving…
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Saving...
             </>
-          ) : submitLabel}
-        </Button>
+          ) : (
+            submitLabel
+          )}
+        </button>
       </div>
     </form>
   );

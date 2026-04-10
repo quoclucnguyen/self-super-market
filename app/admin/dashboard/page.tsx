@@ -226,19 +226,19 @@ export default async function DashboardPage({
     await getDashboardData(params);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+    <div className="space-y-2 p-2 wf-bg wf-scroll">
+      {/* Page Header - Windows Style */}
+      <div className="wf-panel p-3">
+        <h1 className="text-sm font-bold wf-text">
           Dashboard
         </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-xs wf-text-muted">
           Overview of your product inventory
         </p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      {/* KPI Cards - Windows Style */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
         <DashboardKPICard
           value={kpis.totalProducts}
           label="Total Products"
@@ -301,14 +301,14 @@ export default async function DashboardPage({
       />
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
         {/* Recent Products - Takes 2 columns */}
         <div className="lg:col-span-2">
           <DashboardProductTable products={products} maxDisplay={20} />
         </div>
 
         {/* Right sidebar */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1 space-y-2">
           {/* Low Stock Alerts */}
           <LowStockAlerts alerts={lowStockAlerts} maxDisplay={5} />
 
@@ -317,26 +317,26 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-          <ClipboardCheck className="w-5 h-5" />
+      {/* Quick Actions - Windows Style */}
+      <div className="wf-panel p-3">
+        <h3 className="wf-label font-semibold mb-3 flex items-center gap-2">
+          <ClipboardCheck className="w-4 h-4" />
           Quick Actions
         </h3>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           <Link
             href="/admin/products/new"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
+            className="wf-button wf-focus-visible"
           >
             + Add Product
           </Link>
-          <button className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-sm font-medium transition-colors">
+          <button className="wf-button wf-focus-visible">
             + Bulk Import
           </button>
-          <button className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-sm font-medium transition-colors">
+          <button className="wf-button wf-focus-visible">
             Export Data
           </button>
-          <button className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-sm font-medium transition-colors">
+          <button className="wf-button wf-focus-visible">
             Scan Barcode
           </button>
         </div>

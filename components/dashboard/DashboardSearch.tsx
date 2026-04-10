@@ -2,15 +2,6 @@
 
 import { useState } from 'react';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 export interface DashboardFilters {
   search: string;
@@ -75,106 +66,92 @@ export function DashboardSearch({
   ].filter(Boolean).length;
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+    <div className="wf-panel">
       {/* Basic Search */}
-      <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col sm:flex-row gap-3">
+      <div className="p-3 border-b border-gray-300">
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <Input
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 wf-text-muted pointer-events-none" />
+            <input
               type="text"
               placeholder="Search by name, barcode, or SKU..."
               value={filters.search}
               onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
-              className="pl-10"
+              className="wf-input w-full pl-8"
             />
           </div>
-          <Button
+          <button
             type="button"
-            variant="outline"
-            size="sm"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="relative"
+            className="wf-button wf-focus-visible relative"
           >
-            <SlidersHorizontal className="w-4 h-4 mr-2" />
+            <SlidersHorizontal className="w-3 h-3 mr-1" />
             Filters
             {activeFilterCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-5 w-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">
+              <span className="absolute -top-1 -right-1 h-4 w-4 bg-blue-700 text-white rounded-full flex items-center justify-center text-[10px]">
                 {activeFilterCount}
               </span>
             )}
-          </Button>
+          </button>
         </div>
 
         {/* Advanced Filters */}
         {showAdvanced && (
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block wf-label mb-1">
                 Category
               </label>
-              <Select
+              <select
                 value={filters.category}
-                onValueChange={(value) => onFiltersChange({ ...filters, category: value })}
+                onChange={(e) => onFiltersChange({ ...filters, category: e.target.value })}
+                className="wf-select w-full"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">All categories</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block wf-label mb-1">
                 Stock Status
               </label>
-              <Select
+              <select
                 value={filters.stockStatus}
-                onValueChange={(value) =>
-                  onFiltersChange({ ...filters, stockStatus: value as DashboardFilters['stockStatus'] })
+                onChange={(e) =>
+                  onFiltersChange({ ...filters, stockStatus: e.target.value as DashboardFilters['stockStatus'] })
                 }
+                className="wf-select w-full"
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {stockStatusOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {stockStatusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block wf-label mb-1">
                 Sort By
               </label>
-              <Select
+              <select
                 value={filters.sortBy}
-                onValueChange={(value) =>
-                  onFiltersChange({ ...filters, sortBy: value as DashboardFilters['sortBy'] })
+                onChange={(e) =>
+                  onFiltersChange({ ...filters, sortBy: e.target.value as DashboardFilters['sortBy'] })
                 }
+                className="wf-select w-full"
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {sortOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         )}
@@ -182,60 +159,58 @@ export function DashboardSearch({
         {/* Active Filters & Clear */}
         {hasActiveFilters(filters) && (
           <div className="mt-3 flex items-center justify-between">
-            <div className="flex flex-wrap gap-2 text-sm">
+            <div className="flex flex-wrap gap-2">
               {filters.search && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-700 dark:text-gray-300">
+                <span className="wf-badge flex items-center gap-1">
                   Search: "{filters.search}"
                   <button
                     onClick={() => onFiltersChange({ ...filters, search: '' })}
-                    className="hover:text-gray-900 dark:hover:text-gray-100"
+                    className="hover:text-gray-900"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               )}
               {filters.category && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-700 dark:text-gray-300">
+                <span className="wf-badge flex items-center gap-1">
                   Category: {filters.category}
                   <button
                     onClick={() => onFiltersChange({ ...filters, category: '' })}
-                    className="hover:text-gray-900 dark:hover:text-gray-100"
+                    className="hover:text-gray-900"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               )}
               {filters.stockStatus !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-700 dark:text-gray-300">
+                <span className="wf-badge flex items-center gap-1">
                   {stockStatusOptions.find((o) => o.value === filters.stockStatus)?.label}
                   <button
                     onClick={() => onFiltersChange({ ...filters, stockStatus: 'all' })}
-                    className="hover:text-gray-900 dark:hover:text-gray-100"
+                    className="hover:text-gray-900"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               )}
             </div>
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
               onClick={handleClearFilters}
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+              className="wf-button wf-focus-visible"
             >
               Clear all
-            </Button>
+            </button>
           </div>
         )}
       </div>
 
       {/* Results Summary */}
       {(resultCount !== undefined || hasActiveFilters(filters)) && (
-        <div className="px-4 sm:px-6 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="wf-statusbar px-3 py-2">
+          <p className="text-xs wf-text-muted">
             {resultCount !== undefined && (
-              <span className="font-medium text-gray-900 dark:text-gray-100">
+              <span className="font-medium wf-text">
                 {resultCount}
               </span>
             )}

@@ -30,44 +30,45 @@ function ToastItem({ toast, onDismiss }: ToastProps) {
   }, [toast.id, toast.duration, onDismiss]);
 
   const icons = {
-    success: <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />,
-    error: <AlertCircle className="w-5 h-5 text-destructive" />,
-    info: <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />,
-    warning: <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />,
+    success: <CheckCircle className="w-4 h-4 text-green-700" />,
+    error: <AlertCircle className="w-4 h-4 text-red-700" />,
+    info: <Info className="w-4 h-4 text-blue-700" />,
+    warning: <AlertTriangle className="w-4 h-4 text-yellow-700" />,
   };
 
-  const backgrounds = {
-    success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
-    error: 'bg-destructive/10 dark:bg-destructive/20 border-destructive/20 dark:border-destructive/30',
-    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
-    warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
+  const messageBoxTypes = {
+    success: 'wf-messagebox-info',
+    error: 'wf-messagebox-error',
+    info: 'wf-messagebox-info',
+    warning: 'wf-messagebox-warning',
   };
 
   return (
     <div
       className={`
-        flex items-center gap-3 p-4 rounded-lg border shadow-lg
+        wf-messagebox ${messageBoxTypes[toast.type]}
         transition-all duration-200 ease-out
-        ${backgrounds[toast.type]}
         ${isLeaving ? 'opacity-0 translate-x-full' : 'opacity-100 translate-x-0'}
       `}
       role="alert"
       aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
     >
-      {icons[toast.type]}
-      <p className="flex-1 text-sm font-medium text-foreground">
-        {toast.message}
-      </p>
-      <button
-        onClick={() => {
-          setIsLeaving(true);
-          setTimeout(() => onDismiss(toast.id), 200);
-        }}
-        className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors min-h-9 min-w-9 focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label="Dismiss notification"
-      >
-        <X className="w-4 h-4 text-muted-foreground" />
-      </button>
+      <div className="flex items-center gap-2">
+        {icons[toast.type]}
+        <p className="flex-1 text-xs wf-text">
+          {toast.message}
+        </p>
+        <button
+          onClick={() => {
+            setIsLeaving(true);
+            setTimeout(() => onDismiss(toast.id), 200);
+          }}
+          className="wf-button wf-focus-visible !min-h-0 !py-0 !px-1 ml-2"
+          aria-label="Dismiss notification"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -79,7 +80,7 @@ interface ToastContainerProps {
 
 export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full">
+    <div className="fixed top-16 right-4 z-50 flex flex-col gap-1 max-w-sm w-full">
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
       ))}

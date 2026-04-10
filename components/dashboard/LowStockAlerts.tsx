@@ -15,10 +15,10 @@ interface LowStockAlertsProps {
   maxDisplay?: number;
 }
 
-function getStockColor(quantity: number) {
-  if (quantity <= 5) return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50';
-  if (quantity <= 10) return 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/50';
-  return 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-950/50';
+function getStockBadge(quantity: number) {
+  if (quantity <= 5) return 'wf-badge wf-badge-error';
+  if (quantity <= 10) return 'wf-badge wf-badge-warning';
+  return 'wf-badge wf-badge-error';
 }
 
 function getStockLabel(quantity: number) {
@@ -33,66 +33,60 @@ export function LowStockAlerts({ alerts, threshold = 20, maxDisplay = 5 }: LowSt
 
   if (displayAlerts.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-3 text-gray-400">
-          <Package className="w-5 h-5" />
-          <p className="text-sm">All products are in stock.</p>
+      <div className="wf-panel">
+        <div className="flex items-center gap-2 p-3 wf-text-muted">
+          <Package className="w-4 h-4" />
+          <p className="text-xs">All products are in stock.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-      <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-orange-500" />
-            Low Stock Alerts
-          </h3>
-          {sortedAlerts.length > maxDisplay && (
-            <Link
-              href="/admin?lowStock=true"
-              className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              View all ({sortedAlerts.length})
-            </Link>
-          )}
-        </div>
+    <div className="wf-panel">
+      <div className="wf-menubar px-3 py-2 flex items-center justify-between">
+        <h3 className="wf-label font-semibold flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-orange-600" />
+          Low Stock Alerts
+        </h3>
+        {sortedAlerts.length > maxDisplay && (
+          <Link
+            href="/admin?lowStock=true"
+            className="text-xs wf-link"
+          >
+            View all ({sortedAlerts.length})
+          </Link>
+        )}
       </div>
 
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      <div className="divide-y divide-gray-300">
         {displayAlerts.map((alert) => (
           <Link
             key={alert.productId}
             href={`/admin/products/${alert.productId}`}
-            className="block p-4 sm:p-5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            className="wf-list-item block"
           >
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2 px-2 py-2">
               {alert.imageUrl && (
-                <div className="flex-shrink-0 w-12 h-12 rounded bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                <div className="wf-panel flex-shrink-0 w-10 h-10 overflow-hidden">
                   <Image
                     src={alert.imageUrl}
                     alt={alert.productName}
-                    width={48}
-                    height={48}
+                    width={40}
+                    height={40}
                     className="w-full h-full object-cover"
                   />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                <p className="wf-label font-medium truncate">
                   {alert.productName}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getStockColor(
-                      alert.stockQuantity
-                    )}`}
-                  >
+                  <span className={getStockBadge(alert.stockQuantity)}>
                     {alert.stockQuantity} left
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs wf-text-muted">
                     {getStockLabel(alert.stockQuantity)}
                   </span>
                 </div>

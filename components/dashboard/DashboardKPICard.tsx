@@ -1,4 +1,5 @@
 import { LucideIcon } from 'lucide-react';
+import Link from 'next/link';
 
 interface KPICardProps {
   value: string | number;
@@ -12,24 +13,20 @@ interface KPICardProps {
 
 const colorStyles = {
   blue: {
-    bg: 'bg-blue-50 dark:bg-blue-950',
-    text: 'text-blue-600 dark:text-blue-400',
-    iconBg: 'bg-blue-100 dark:bg-blue-900',
+    text: 'text-blue-700',
+    badge: 'wf-badge-info',
   },
   green: {
-    bg: 'bg-green-50 dark:bg-green-950',
-    text: 'text-green-600 dark:text-green-400',
-    iconBg: 'bg-green-100 dark:bg-green-900',
+    text: 'text-green-700',
+    badge: 'wf-badge-success',
   },
   orange: {
-    bg: 'bg-orange-50 dark:bg-orange-950',
-    text: 'text-orange-600 dark:text-orange-400',
-    iconBg: 'bg-orange-100 dark:bg-orange-900',
+    text: 'text-orange-700',
+    badge: 'wf-badge-warning',
   },
   red: {
-    bg: 'bg-red-50 dark:bg-red-950',
-    text: 'text-red-600 dark:text-red-400',
-    iconBg: 'bg-red-100 dark:bg-red-900',
+    text: 'text-red-700',
+    badge: 'wf-badge-error',
   },
 };
 
@@ -49,34 +46,36 @@ export function DashboardKPICard({
   href,
 }: KPICardProps) {
   const styles = colorStyles[color];
-  const CardComponent = href ? 'a' : 'div';
 
-  return (
-    <CardComponent
-      href={href}
-      className={`${styles.bg} ${href ? 'hover:opacity-80 transition-opacity' : ''} rounded-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700`}
-    >
-      <div className="flex items-start justify-between">
+  const cardContent = (
+    <div className={`wf-panel-white ${href ? 'hover:opacity-80 transition-opacity cursor-pointer' : ''}`}>
+      <div className="flex items-start justify-between p-3">
         <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{label}</p>
-          <p className={`text-2xl sm:text-3xl font-bold ${styles.text} mt-2`}>
+          <p className="wf-label wf-text-muted">{label}</p>
+          <p className={`text-2xl font-bold ${styles.text} mt-1`}>
             {value}
           </p>
           {trend && trendValue && (
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-sm font-medium text-gray-500 dark:text-gray-500">
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs font-medium wf-text-muted">
                 {trendIcons[trend]}
               </span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">{trendValue}</span>
+              <span className="text-xs wf-text-muted">{trendValue}</span>
             </div>
           )}
         </div>
         {Icon && (
-          <div className={`${styles.iconBg} p-3 rounded-lg`}>
-            <Icon className={`w-6 h-6 ${styles.text}`} />
+          <div className={`wf-panel p-2`}>
+            <Icon className={`w-5 h-5 ${styles.text}`} />
           </div>
         )}
       </div>
-    </CardComponent>
+    </div>
   );
+
+  if (href) {
+    return <Link href={href}>{cardContent}</Link>;
+  }
+
+  return cardContent;
 }
