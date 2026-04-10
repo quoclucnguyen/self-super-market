@@ -27,10 +27,10 @@ export function normalizeIncomingImages(
       order: image.order ?? index,
     }));
 
-  if (normalized.length === 0 && imageUrl && imagePublicId) {
+  if (normalized.length === 0 && imageUrl) {
     normalized.push({
       imageUrl,
-      imagePublicId,
+      imagePublicId: imagePublicId ?? '',
       isPrimary: true,
       order: 0,
     });

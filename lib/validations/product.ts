@@ -119,10 +119,10 @@ export const productSchema = z.object({
     .optional(),
 
   // Backward-compatible primary image fields
-  imageUrl: z.string()
-    .url('Invalid image URL')
-    .optional()
-    .or(z.literal('').transform(() => undefined)),
+  imageUrl: z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.string().url('Invalid image URL').optional(),
+  ),
   imagePublicId: z.string().optional(),
   isActive: z.boolean().optional(),
 });
