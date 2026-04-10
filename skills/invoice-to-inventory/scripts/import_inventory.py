@@ -76,6 +76,38 @@ def choose_name(result: dict, candidate: dict) -> str:
     )
 
 
+def infer_unit(result: dict, candidate: dict) -> str:
+    item_type = candidate.get('itemType') or result.get('itemType')
+    if item_type == 'weighted':
+        return 'Kg'
+    return 'Cái'
+
+
+def infer_category_name(result: dict, candidate: dict) -> str | None:
+    category = result.get('category')
+    if isinstance(category, str) and category.strip():
+        category = category.strip()
+        if len(category) <= 100:
+            return category
+        first = re.split(r'\s*,\s*', category)[0].strip()
+        if first and len(first) <= 100:
+            return first
+
+    name = choose_name(result, candidate).upper()
+    rules = [
+        (['MI', 'MIEN', 'PHO', 'BUN', 'NUODLES', 'PASTA'], 'Mì, miến, cháo'),
+        (['GIA VI', 'BOT', 'SOT', 'SATE', 'SAUCE'], 'Gia vị, nước sốt'),
+        (['GAO', 'RICE'], 'Gạo, ngũ cốc'),
+        (['XUC XICH', 'XÚC XÍCH', 'GA', 'THIT', 'CÁ', 'HAI SAN'], 'Thịt, hải sản chế biến'),
+        (['BANH', 'SNACK'], 'Bánh, đồ ăn vặt'),
+        (['DUONG', 'GIAM'], 'Nhu yếu phẩm thực phẩm'),
+    ]
+    for needles, mapped in rules:
+        if any(token in name for token in needles):
+            return mapped
+    return 'Thực phẩm đóng gói'
+
+
 def build_payload(result: dict, candidate: dict, default_stock: int, mode: str) -> dict:
     stock_quantity = default_stock
     if mode == 'stock':
@@ -83,15 +115,32 @@ def build_payload(result: dict, candidate: dict, default_stock: int, mode: str) 
     payload = {
         'name': choose_name(result, candidate),
         'barcode': str(candidate.get('barcode') or result.get('barcode') or '').strip(),
+        'unit': infer_unit(result, candidate),
+        'categoryName': infer_category_name(result, candidate),
+        'codes': [
+            {
+                'code': str(candidate.get('barcode') or result.get('barcode') or '').strip(),
+                'codeType': 'barcode',
+                'isPrimary': True,
+                'isActive': True,
+            }
+        ],
         'price': normalize_price(candidate.get('lineTotal') or candidate.get('unitPrice') or result.get('price')),
-        'description': result.get('description') or None,
-        'category': result.get('category') or None,
+        'brandName': result.get('brand') or None,
+        'description': result.get('description') if isinstance(result.get('description'), str) and result.get('description').strip() else None,
         'stockQuantity': stock_quantity,
-        'imageUrl': result.get('imageUrl') or None,
+        'imageUrl': result.get('imageUrl') if isinstance(result.get('imageUrl'), str) and result.get('imageUrl').strip() else None,
         'imagePublicId': None,
     }
     if payload['price'] <= 0:
         payload['price'] = normalize_price(candidate.get('unitPrice'))
+    if payload['description'] is None:
+        payload.pop('description')
+    if payload['imageUrl'] is None:
+        payload.pop('imageUrl')
+    payload.pop('imagePublicId', None)
+    if payload.get('brandName') is None:
+        payload.pop('brandName', None)
     return payload
 
 
@@ -101,6 +150,9 @@ def has_minimum_catalog_quality(result: dict, candidate: dict) -> tuple[bool, st
     price = normalize_price(candidate.get('lineTotal') or candidate.get('unitPrice') or result.get('price'))
     item_type = candidate.get('itemType') or result.get('itemType')
     status = result.get('status') or ''
+    image_url = result.get('imageUrl')
+    search_passes = result.get('searchPasses') or []
+    attempted_three_passes = len(search_passes) >= 3
 
     if not barcode or not barcode.isdigit() or len(barcode) not in {12, 13}:
         return False, 'invalid_barcode'
@@ -114,6 +166,10 @@ def has_minimum_catalog_quality(result: dict, candidate: dict) -> tuple[bool, st
         return False, 'missing_price'
     if price >= 1_000_000:
         return False, 'price_too_high'
+    if not image_url:
+        if attempted_three_passes:
+            return False, 'image_missing_after_three_search_passes'
+        return False, 'image_missing_before_three_search_passes'
     return True, 'ok'
 
 
@@ -206,25 +262,46 @@ def main():
                     merged_payload['stockQuantity'] = existing_stock if existing_stock > 0 else payload['stockQuantity']
                 merged_payload['id'] = existing['id']
                 response = curl_json('PUT', f"{base_url()}/api/products/{existing['id']}", merged_payload)
-                summary['updated'] += 1
-                actions.append({
-                    'barcode': barcode,
-                    'name': merged_payload['name'],
-                    'action': 'updated',
-                    'productId': existing['id'],
-                    'payload': merged_payload,
-                    'response': response,
-                })
+                if isinstance(response, dict) and response.get('id'):
+                    summary['updated'] += 1
+                    actions.append({
+                        'barcode': barcode,
+                        'name': merged_payload['name'],
+                        'action': 'updated',
+                        'productId': existing['id'],
+                        'payload': merged_payload,
+                        'response': response,
+                    })
+                else:
+                    summary['failed'] += 1
+                    actions.append({
+                        'barcode': barcode,
+                        'name': merged_payload['name'],
+                        'action': 'failed',
+                        'productId': existing['id'],
+                        'payload': merged_payload,
+                        'response': response,
+                    })
             else:
                 response = curl_json('POST', f"{base_url()}/api/products", payload)
-                summary['created'] += 1
-                actions.append({
-                    'barcode': barcode,
-                    'name': payload['name'],
-                    'action': 'created',
-                    'payload': payload,
-                    'response': response,
-                })
+                if isinstance(response, dict) and response.get('id'):
+                    summary['created'] += 1
+                    actions.append({
+                        'barcode': barcode,
+                        'name': payload['name'],
+                        'action': 'created',
+                        'payload': payload,
+                        'response': response,
+                    })
+                else:
+                    summary['failed'] += 1
+                    actions.append({
+                        'barcode': barcode,
+                        'name': payload['name'],
+                        'action': 'failed',
+                        'payload': payload,
+                        'response': response,
+                    })
         except Exception as exc:
             summary['failed'] += 1
             actions.append({

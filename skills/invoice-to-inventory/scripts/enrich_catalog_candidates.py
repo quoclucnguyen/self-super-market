@@ -2,6 +2,7 @@
 import argparse
 import html
 import json
+import os
 import re
 import subprocess
 import sys
@@ -34,6 +35,9 @@ API_SOURCES = [
     'openfoodfacts',
     'upcitemdb',
 ]
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+PLAYWRIGHT_SCRIPT = SCRIPT_DIR / 'playwright_image_search.js'
 
 NAME_FIXES = {
     'KHOAT': 'KHOAI',
@@ -243,6 +247,60 @@ def enrich_via_apis(barcode: str, raw_name: str, clean: str, timeout_s: float, a
     return None
 
 
+def enrich_via_playwright(barcode: str, raw_name: str, clean: str, timeout_s: float, errors: list[str]):
+    if not PLAYWRIGHT_SCRIPT.exists():
+        errors.append('playwright_script_missing')
+        return None
+    tmp_in = SCRIPT_DIR / '.playwright_image_search_input.json'
+    payload = {
+        'barcode': barcode,
+        'rawName': raw_name,
+        'cleanName': clean,
+        'timeoutMs': int(timeout_s * 1000),
+    }
+    tmp_in.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
+    env = dict(os.environ)
+    try:
+        npm_root = subprocess.check_output(['npm', 'root', '-g'], text=True).strip()
+        env['NODE_PATH'] = npm_root + (os.pathsep + env['NODE_PATH'] if env.get('NODE_PATH') else '')
+    except Exception:
+        pass
+    try:
+        proc = subprocess.run(
+            ['node', str(PLAYWRIGHT_SCRIPT), str(tmp_in)],
+            capture_output=True,
+            text=True,
+            timeout=max(int(timeout_s) + 5, 20),
+            env=env,
+            check=True,
+        )
+        data = json.loads(proc.stdout)
+        image_url = data.get('imageUrl')
+        if not image_url:
+            return None
+        return {
+            'barcode': barcode,
+            'rawName': raw_name,
+            'cleanName': clean,
+            'status': 'browser_image_match',
+            'normalizedName': clean,
+            'imageUrl': image_url,
+            'matchConfidence': 'medium',
+            'source': data.get('source') or 'playwright_google_images',
+            'sourceUrls': data.get('sourceUrls') or ([image_url] if image_url else []),
+            'searchPasses': data.get('searchPasses') or [],
+            'searchResults': [],
+        }
+    except Exception as exc:
+        errors.append(f'playwright: {exc}')
+        return None
+    finally:
+        try:
+            tmp_in.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+
 def enrich_candidate(candidate: dict, pause_s: float, timeout_s: float, retries: int):
     barcode = str(candidate.get('barcode') or '')
     raw_name = candidate.get('rawName') or ''
@@ -270,32 +328,52 @@ def enrich_candidate(candidate: dict, pause_s: float, timeout_s: float, retries:
             'notes': 'Barcode looks internal, malformed, or unreliable for catalog enrichment.',
         }
 
+    browser_errors = []
+    browser_result = enrich_via_playwright(barcode, raw_name, clean, timeout_s, browser_errors)
+    if browser_result:
+        return browser_result
+
     api_errors = []
     api_result = enrich_via_apis(barcode, raw_name, clean, min(timeout_s, 8.0), api_errors)
     if api_result:
         if api_errors:
             api_result['apiErrors'] = api_errors
+        if browser_errors:
+            api_result['browserErrors'] = browser_errors
         return api_result
 
     queries = [barcode, f'{barcode} {clean}', clean]
+    search_passes = []
     merged = []
     seen = set()
     search_errors = []
-    for query in queries:
+    for pass_no, query in enumerate(queries, start=1):
         query_ok = False
+        attempts_used = 0
+        added_this_pass = 0
         for attempt in range(1, retries + 1):
+            attempts_used = attempt
             try:
+                before = len(merged)
                 for item in ddg_search(query, timeout_s=timeout_s):
                     url = item.get('url')
                     if url and url not in seen:
                         seen.add(url)
                         merged.append(item)
+                added_this_pass = len(merged) - before
                 query_ok = True
                 break
             except Exception as exc:
                 search_errors.append(f'query={query} attempt={attempt}: {exc}')
                 if attempt < retries:
                     time.sleep(min(1.5 * attempt, 3.0))
+        search_passes.append({
+            'pass': pass_no,
+            'query': query,
+            'ok': query_ok,
+            'attempts': attempts_used,
+            'newResults': added_this_pass,
+        })
         if pause_s > 0:
             time.sleep(pause_s)
         if not query_ok and query == barcode:
@@ -318,7 +396,10 @@ def enrich_candidate(candidate: dict, pause_s: float, timeout_s: float, retries:
         'source': 'duckduckgo_fallback',
         'sourceUrls': [item['url'] for item in top if item.get('url')],
         'searchResults': top,
+        'searchPasses': search_passes,
     }
+    if browser_errors:
+        out['browserErrors'] = browser_errors
     if api_errors:
         out['apiErrors'] = api_errors
     if search_errors:
