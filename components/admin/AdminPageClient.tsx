@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import Image from 'next/image';
 import { Plus, X, Loader2, Trash2 } from 'lucide-react';
 import { ProductForm } from './ProductForm';
 import { DeleteDialog } from './DeleteDialog';
@@ -477,12 +476,10 @@ function ProductListPanel({
         >
           {product.imageUrl ? (
             <div className="wf-panel relative w-10 h-10 overflow-hidden shrink-0">
-              <Image
+              <img
                 src={product.imageUrl}
                 alt={product.name}
-                fill
-                className="object-cover"
-                sizes="40px"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             </div>
           ) : (

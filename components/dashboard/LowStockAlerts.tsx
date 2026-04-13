@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { AlertTriangle, Package } from 'lucide-react';
-import Image from 'next/image';
 
 interface LowStockAlert {
   productId: number;
@@ -69,11 +68,9 @@ export function LowStockAlerts({ alerts, threshold = 20, maxDisplay = 5 }: LowSt
             <div className="flex items-start gap-2 px-2 py-2">
               {alert.imageUrl && (
                 <div className="wf-panel flex-shrink-0 w-10 h-10 overflow-hidden">
-                  <Image
+                  <img
                     src={alert.imageUrl}
                     alt={alert.productName}
-                    width={40}
-                    height={40}
                     className="w-full h-full object-cover"
                   />
                 </div>

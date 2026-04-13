@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 export default function Home() {
@@ -6,13 +5,12 @@ export default function Home() {
     <div className="flex flex-col flex-1 items-center justify-center font-sans">
       <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 sm:items-start">
         <Link href="/">
-          <Image
+          <img
             className="dark:invert"
             src="/next.svg"
             alt="Next.js logo"
             width={100}
             height={20}
-            priority
           />
         </Link>
         <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">

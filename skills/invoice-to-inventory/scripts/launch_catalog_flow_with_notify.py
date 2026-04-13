@@ -74,6 +74,8 @@ def main():
 
     watcher_log = Path(payload['outDir']) / 'watcher.log'
     with open(watcher_log, 'a', encoding='utf-8') as logf:
+        logf.write('watch_cmd=' + json.dumps(watch_cmd, ensure_ascii=False) + '\n')
+        logf.flush()
         watcher = subprocess.Popen(
             watch_cmd,
             stdout=logf,

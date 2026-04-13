@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { Edit, Trash2, MoreVertical } from 'lucide-react';
 import type { Product, ProductCode } from '@/drizzle/schema';
 
@@ -98,12 +97,10 @@ export function ProductListClient({ products, onEdit, onDelete }: ProductListCli
                   <div className="flex items-center gap-4">
                     {product.imageUrl ? (
                       <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                        <Image
+                        <img
                           src={product.imageUrl}
                           alt={product.name}
-                          fill
-                          className="object-cover"
-                          sizes="48px"
+                          className="absolute inset-0 w-full h-full object-cover"
                         />
                       </div>
                     ) : (
@@ -186,12 +183,10 @@ export function ProductListClient({ products, onEdit, onDelete }: ProductListCli
             <div className="flex gap-4">
               {product.imageUrl ? (
                 <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-muted shrink-0">
-                  <Image
+                  <img
                     src={product.imageUrl}
                     alt={product.name}
-                    fill
-                    className="object-cover"
-                    sizes="80px"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                 </div>
               ) : (

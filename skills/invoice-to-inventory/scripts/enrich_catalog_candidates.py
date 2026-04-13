@@ -12,6 +12,11 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, quote_plus, unquote, urlparse
 from urllib.request import Request, urlopen
 
+try:
+    from crawl4ai import AsyncWebCrawler
+except Exception:
+    AsyncWebCrawler = None
+
 from catalog_job_status import append_event, update_status
 
 PREFERRED_DOMAINS = [
@@ -19,6 +24,11 @@ PREFERRED_DOMAINS = [
     'bachhoaxanh.com',
     'winmart.vn',
     'cooponline.vn',
+    'cooponline.com.vn',
+    'goonline.vn',
+    'emartmall.com.vn',
+    'kingfoodmart.com',
+    'mmpro.vn',
     'acecookvietnam.vn',
     'masanconsumer.com',
     'dhfoods.com.vn',
@@ -26,9 +36,36 @@ PREFERRED_DOMAINS = [
     'barona.vn',
     'cautre.com.vn',
     'takyfood.com',
+    'gentracofoods.com',
+    'cholimexfood.com.vn',
+    'vinamilk.com.vn',
+    'masanmeatlife.com.vn',
     'world.openfoodfacts.org',
     'openfoodfacts.org',
     'upcitemdb.com',
+]
+
+VIETNAMESE_PRIORITY_DOMAINS = [
+    'lottemart.vn',
+    'bachhoaxanh.com',
+    'winmart.vn',
+    'cooponline.vn',
+    'cooponline.com.vn',
+    'goonline.vn',
+    'emartmall.com.vn',
+    'kingfoodmart.com',
+    'mmpro.vn',
+    'acecookvietnam.vn',
+    'masanconsumer.com',
+    'dhfoods.com.vn',
+    'cpfoods.vn',
+    'barona.vn',
+    'cautre.com.vn',
+    'takyfood.com',
+    'gentracofoods.com',
+    'cholimexfood.com.vn',
+    'vinamilk.com.vn',
+    'masanmeatlife.com.vn',
 ]
 
 API_SOURCES = [
@@ -38,6 +75,8 @@ API_SOURCES = [
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PLAYWRIGHT_SCRIPT = SCRIPT_DIR / 'playwright_image_search.js'
+PLAYWRIGHT_MULTI_ENGINE_PYTHON = SCRIPT_DIR / 'playwright_multi_engine_search.py'
+CRAWL4AI_VENV_PYTHON = Path('/home/luc/.openclaw/workspace/.venv-crawl4ai/bin/python')
 
 NAME_FIXES = {
     'KHOAT': 'KHOAI',
@@ -88,17 +127,34 @@ def fetch_json(url: str, timeout_s: float = 8.0):
         return json.loads(resp.read().decode('utf-8', errors='replace'))
 
 
-def ddg_search(query: str, limit: int = 8, timeout_s: float = 12.0):
-    body = curl('https://html.duckduckgo.com/html/?q=' + quote_plus(query), timeout_s=timeout_s)
-    results = []
-    for m in re.finditer(r'<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)</a>', body, re.S):
-        href = unwrap_ddg(m.group(1))
-        title = re.sub(r'<.*?>', ' ', m.group(2))
-        title = html.unescape(re.sub(r'\s+', ' ', title).strip())
-        results.append({'title': title, 'url': href})
-        if len(results) >= limit:
-            break
-    return results
+def playwright_search_web(queries: list[str], timeout_s: float = 12.0):
+    if not PLAYWRIGHT_MULTI_ENGINE_PYTHON.exists():
+        return [], [], ['playwright_multi_engine_python_missing']
+    if not CRAWL4AI_VENV_PYTHON.exists():
+        return [], [], ['crawl4ai_venv_python_missing']
+    tmp_in = SCRIPT_DIR / '.playwright_multi_engine_input.json'
+    payload = {
+        'queries': queries,
+        'timeoutMs': int(timeout_s * 1000),
+    }
+    tmp_in.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
+    try:
+        proc = subprocess.run(
+            [str(CRAWL4AI_VENV_PYTHON), str(PLAYWRIGHT_MULTI_ENGINE_PYTHON), str(tmp_in)],
+            capture_output=True,
+            text=True,
+            timeout=max(int(timeout_s * max(1, len(queries))) + 20, 45),
+            check=True,
+        )
+        data = json.loads(proc.stdout)
+        return data.get('results') or [], data.get('searchPasses') or [], []
+    except Exception as exc:
+        return [], [], [f'playwright_search: {exc}']
+    finally:
+        try:
+            tmp_in.unlink(missing_ok=True)
+        except Exception:
+            pass
 
 
 def clean_name(name: str) -> str:
@@ -148,6 +204,8 @@ def score_result(barcode: str, clean: str, result: dict) -> int:
     score += sum(1 for tok in tokens if len(tok) >= 3 and tok in title)
     if any(domain in url for domain in PREFERRED_DOMAINS):
         score += 2
+    if any(domain in url for domain in VIETNAMESE_PRIORITY_DOMAINS):
+        score += 4
     return score
 
 
@@ -230,6 +288,8 @@ def enrich_from_upcitemdb(barcode: str, raw_name: str, clean: str, timeout_s: fl
 
 
 def enrich_via_apis(barcode: str, raw_name: str, clean: str, timeout_s: float, api_errors: list[str]):
+    prioritized = []
+    fallback = []
     for source in API_SOURCES:
         try:
             if source == 'openfoodfacts':
@@ -239,11 +299,19 @@ def enrich_via_apis(barcode: str, raw_name: str, clean: str, timeout_s: float, a
             else:
                 result = None
             if result:
-                return result
+                source_urls = result.get('sourceUrls') or []
+                if any(any(domain in url for domain in VIETNAMESE_PRIORITY_DOMAINS) for url in source_urls):
+                    prioritized.append(result)
+                else:
+                    fallback.append(result)
         except (HTTPError, URLError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
             api_errors.append(f'{source}: {exc}')
         except Exception as exc:
             api_errors.append(f'{source}: {exc}')
+    if prioritized:
+        return prioritized[0]
+    if fallback:
+        return fallback[0]
     return None
 
 
@@ -257,6 +325,7 @@ def enrich_via_playwright(barcode: str, raw_name: str, clean: str, timeout_s: fl
         'rawName': raw_name,
         'cleanName': clean,
         'timeoutMs': int(timeout_s * 1000),
+        'preferredDomains': VIETNAMESE_PRIORITY_DOMAINS,
     }
     tmp_in.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
     env = dict(os.environ)
@@ -301,6 +370,102 @@ def enrich_via_playwright(barcode: str, raw_name: str, clean: str, timeout_s: fl
             pass
 
 
+def score_image_candidate(url: str, alt: str, title: str, clean: str) -> int:
+    score = 0
+    joined = f'{url} {alt} {title}'.upper()
+    if re.search(r'\b(400|500|600|700|800|900|1000|1200)X\b', joined):
+        score += 2
+    if any(tok in joined for tok in tokenize(clean)[:4]):
+        score += 3
+    if any(domain in url for domain in VIETNAMESE_PRIORITY_DOMAINS):
+        score += 4
+    if any(domain in url for domain in PREFERRED_DOMAINS):
+        score += 2
+    if re.search(r'logo|icon|avatar|banner|placeholder|sprite|thumb', joined, re.I):
+        score -= 5
+    return score
+
+
+def enrich_via_crawl4ai(search_results: list[dict], barcode: str, raw_name: str, clean: str, timeout_s: float, errors: list[str]):
+    if not search_results:
+        errors.append('crawl4ai: no_search_results_to_crawl')
+        return None
+    if not CRAWL4AI_VENV_PYTHON.exists():
+        errors.append('crawl4ai_python_missing')
+        return None
+    candidate_urls = []
+    prioritized_results = sorted(
+        search_results[:5],
+        key=lambda item: score_result(barcode, clean, item),
+        reverse=True,
+    )
+    for item in prioritized_results:
+        url = item.get('url')
+        if not url:
+            continue
+        if any(domain in url for domain in PREFERRED_DOMAINS):
+            candidate_urls.append(url)
+    for item in prioritized_results:
+        url = item.get('url')
+        if url and url not in candidate_urls:
+            candidate_urls.append(url)
+
+    if not candidate_urls:
+        return None
+
+    tmp_in = SCRIPT_DIR / '.crawl4ai_image_search_input.json'
+    helper = SCRIPT_DIR / 'crawl4ai_product_image_search.py'
+    payload = {
+        'urls': candidate_urls[:5],
+        'barcode': barcode,
+        'rawName': raw_name,
+        'cleanName': clean,
+        'timeoutMs': int(timeout_s * 1000),
+        'preferredDomains': VIETNAMESE_PRIORITY_DOMAINS,
+    }
+    tmp_in.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
+    try:
+        proc = subprocess.run(
+            [str(CRAWL4AI_VENV_PYTHON), str(helper), str(tmp_in)],
+            capture_output=True,
+            text=True,
+            timeout=max(int(timeout_s * max(1, len(candidate_urls[:5]))) + 10, 25),
+            check=True,
+        )
+        data = json.loads(proc.stdout)
+        image = data.get('bestImage') or {}
+        image_url = image.get('url')
+        if not image_url:
+            return None
+        score = score_image_candidate(image_url, image.get('alt') or '', image.get('pageTitle') or '', clean)
+        engines = [item.get('engine') for item in prioritized_results if item.get('engine')]
+        primary_engine = engines[0] if engines else 'search_engine'
+        return {
+            'barcode': barcode,
+            'rawName': raw_name,
+            'cleanName': clean,
+            'status': 'crawl4ai_image_match',
+            'normalizedName': data.get('normalizedName') or clean,
+            'imageUrl': image_url,
+            'matchConfidence': choose_confidence(max(score, 4)),
+            'source': f'{primary_engine}_plus_crawl4ai',
+            'searchEngine': primary_engine,
+            'sourceUrls': [u for u in [data.get('bestPageUrl'), image_url] if u],
+            'searchPasses': data.get('searchPasses') or [],
+            'searchResults': prioritized_results,
+            'crawlCandidates': data.get('imageCandidates') or [],
+            'crawlInputUrls': candidate_urls[:5],
+        }
+    except Exception as exc:
+        errors.append(f'crawl4ai: {exc}')
+        return None
+    finally:
+        try:
+            tmp_in.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+
 def enrich_candidate(candidate: dict, pause_s: float, timeout_s: float, retries: int):
     barcode = str(candidate.get('barcode') or '')
     raw_name = candidate.get('rawName') or ''
@@ -329,58 +494,61 @@ def enrich_candidate(candidate: dict, pause_s: float, timeout_s: float, retries:
         }
 
     browser_errors = []
-    browser_result = enrich_via_playwright(barcode, raw_name, clean, timeout_s, browser_errors)
-    if browser_result:
-        return browser_result
+
+    queries = [
+        barcode,
+        f'site:lottemart.vn {barcode}',
+        f'{barcode} {clean}',
+    ]
 
     api_errors = []
+
+    merged, search_passes, search_errors = playwright_search_web(queries, timeout_s=timeout_s)
+    merged = sorted(merged, key=lambda item: score_result(barcode, clean, item), reverse=True)
+    no_search_results = len(merged) == 0
+
+    scored = sorted(((score_result(barcode, clean, item), item) for item in merged), key=lambda x: x[0], reverse=True)
+    top = [item for _, item in scored[:5]]
+
+    crawl_errors = []
+    crawl_result = enrich_via_crawl4ai(top, barcode, raw_name, clean, timeout_s, crawl_errors)
+    if crawl_result:
+        if api_errors:
+            crawl_result['apiErrors'] = api_errors
+        if browser_errors:
+            crawl_result['browserErrors'] = browser_errors
+        if search_errors:
+            crawl_result['searchErrors'] = search_errors
+        crawl_result['searchPreference'] = 'playwright_search_then_crawl4ai'
+        crawl_result['searchDebug'] = {
+            'queryCount': len(queries),
+            'resultCount': len(merged),
+            'topResults': merged[:5],
+        }
+        return crawl_result
+
     api_result = enrich_via_apis(barcode, raw_name, clean, min(timeout_s, 8.0), api_errors)
+    if api_result and no_search_results:
+        api_result['status'] = 'api_match_no_search'
     if api_result:
+        api_result['searchPasses'] = search_passes
+        api_result['searchResults'] = top
         if api_errors:
             api_result['apiErrors'] = api_errors
         if browser_errors:
             api_result['browserErrors'] = browser_errors
+        if search_errors:
+            api_result['searchErrors'] = search_errors
+        if crawl_errors:
+            api_result['crawlErrors'] = crawl_errors
+        api_result['searchPreference'] = 'playwright_search_then_crawl4ai_then_api'
+        api_result['searchDebug'] = {
+            'queryCount': len(queries),
+            'resultCount': len(merged),
+            'topResults': merged[:5],
+        }
         return api_result
 
-    queries = [barcode, f'{barcode} {clean}', clean]
-    search_passes = []
-    merged = []
-    seen = set()
-    search_errors = []
-    for pass_no, query in enumerate(queries, start=1):
-        query_ok = False
-        attempts_used = 0
-        added_this_pass = 0
-        for attempt in range(1, retries + 1):
-            attempts_used = attempt
-            try:
-                before = len(merged)
-                for item in ddg_search(query, timeout_s=timeout_s):
-                    url = item.get('url')
-                    if url and url not in seen:
-                        seen.add(url)
-                        merged.append(item)
-                added_this_pass = len(merged) - before
-                query_ok = True
-                break
-            except Exception as exc:
-                search_errors.append(f'query={query} attempt={attempt}: {exc}')
-                if attempt < retries:
-                    time.sleep(min(1.5 * attempt, 3.0))
-        search_passes.append({
-            'pass': pass_no,
-            'query': query,
-            'ok': query_ok,
-            'attempts': attempts_used,
-            'newResults': added_this_pass,
-        })
-        if pause_s > 0:
-            time.sleep(pause_s)
-        if not query_ok and query == barcode:
-            continue
-
-    scored = sorted(((score_result(barcode, clean, item), item) for item in merged), key=lambda x: x[0], reverse=True)
-    top = [item for _, item in scored[:5]]
     best_score = scored[0][0] if scored else 0
     best = top[0] if top else None
     confidence = choose_confidence(best_score)
@@ -397,6 +565,7 @@ def enrich_candidate(candidate: dict, pause_s: float, timeout_s: float, retries:
         'sourceUrls': [item['url'] for item in top if item.get('url')],
         'searchResults': top,
         'searchPasses': search_passes,
+        'searchPreference': 'playwright_search_then_crawl4ai_then_api',
     }
     if browser_errors:
         out['browserErrors'] = browser_errors
@@ -404,6 +573,18 @@ def enrich_candidate(candidate: dict, pause_s: float, timeout_s: float, retries:
         out['apiErrors'] = api_errors
     if search_errors:
         out['searchErrors'] = search_errors
+    if crawl_errors:
+        out['crawlErrors'] = crawl_errors
+    out['searchDebug'] = {
+        'queryCount': len(queries),
+        'resultCount': len(merged),
+        'topResults': merged[:5],
+    }
+    fallback_browser = enrich_via_playwright(barcode, raw_name, clean, timeout_s, browser_errors)
+    if fallback_browser and not out.get('imageUrl'):
+        out['imageUrl'] = fallback_browser.get('imageUrl')
+        out['fallbackBrowserSource'] = fallback_browser.get('source')
+        out['sourceUrls'] = list(dict.fromkeys(out['sourceUrls'] + (fallback_browser.get('sourceUrls') or [])))
     return out
 
 

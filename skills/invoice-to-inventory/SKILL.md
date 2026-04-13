@@ -79,13 +79,16 @@ Use this flow when the user wants the receipt to become a **product knowledge so
    - Preferred script: `scripts/receipt_catalog_candidates.py <receipt_ocr_output.json>`
 
 3. **Web enrichment**
-   - Prefer browser-first enrichment using Playwright before API/text fallbacks.
-   - Use Playwright to search product images and open product/search pages when possible.
+   - Prefer Playwright-driven web search across DuckDuckGo, Bing, and Google for barcode queries, then use Crawl4AI to crawl the returned product pages and extract the best product image.
+   - Use Playwright image search only as a late fallback when search-engine pages + Crawl4AI fail to yield a usable product image.
+   - Prioritize image discovery from Vietnamese retailer and brand/manufacturer websites first.
+   - Start with retailer-scoped barcode searches on Vietnam domains such as `lottemart.vn`, `bachhoaxanh.com`, `winmart.vn`, `cooponline.vn`, and similar local sources before broad global fallback.
    - Search by barcode first.
    - If needed, search by `barcode + cleanedName`.
    - If still needed, search by `cleanedName`.
-   - Treat these as the default 3 enrichment passes and record each pass in output for auditability.
-   - Prefer official brand pages, then major retailers, then trusted barcode/product databases.
+   - Treat these as the default search passes and record each pass in output for auditability.
+   - Prefer official Vietnamese brand pages, then major Vietnamese retailers, then trusted barcode/product databases.
+   - Only fall back to international sources when no strong Vietnam-source image is found.
    - Try hard to obtain `imageUrl` before import.
    - Skip likely supermarket internal weighted-produce codes early instead of wasting internet lookups.
    - Write checkpoints every few items so long jobs always leave usable partial output.
@@ -208,20 +211,21 @@ Per item, try to infer or verify:
 - `matchConfidence`
 
 Search order:
-1. exact barcode via barcode/product APIs
-2. barcode + cleaned name via barcode/product APIs or retailer/product sources
-3. retailer-scoped barcode query (for example `site:lottemart.vn <barcode>`)
+1. Playwright tries DuckDuckGo, Bing, and Google for retailer-scoped barcode queries and exact barcode queries
+2. Crawl4AI crawls the top search-result pages to extract product images and page titles
+3. barcode + cleaned name via barcode/product APIs or retailer/product sources
 4. cleaned name only
 
 Recommended source preference:
-1. barcode/product APIs (for example Open Food Facts, UPCitemdb, Barcode Lookup when available)
-2. official brand/manufacturer pages
-3. major retailer/product listing pages
-4. trusted barcode/product databases
-5. other sources only as fallback
+1. official Vietnamese brand/manufacturer pages
+2. major Vietnamese retailer/product listing pages discovered through DuckDuckGo and crawled with Crawl4AI
+3. barcode/product APIs that resolve to Vietnam-relevant product identity
+4. trusted global barcode/product databases
+5. Playwright image search and other sources only as fallback
 
 Rules:
 - Keep source-backed values only.
+- Prefer Vietnamese-source `imageUrl` when available, even if a global database also has an image.
 - If multiple identities conflict, mark as ambiguous and exclude from automatic import.
 - If barcode cannot be confidently verified, keep OCR barcode but lower confidence.
 - Skip weighted/internal produce codes early when they are unlikely to map to real retail product pages.
@@ -474,12 +478,14 @@ Behavior requirements:
 - write partial checkpoints during enrichment
 - survive partial network failures by keeping completed results
 - leave a final `enrichment_results.json` with `summary` + `results`
-- prefer Playwright browser search first for image discovery, then fall back to API/text search
-- record the 3 default enrichment passes (`barcode`, `barcode + cleanedName`, `cleanedName`) in each result when fallback or browser search is used
+- prefer Playwright multi-engine search for product/result pages, then Crawl4AI crawl of those pages for image discovery
+- record the actual winning search engine (`duckduckgo`, `bing`, or `google`) in result metadata when Crawl4AI succeeds
+- use Playwright image search only as a fallback image source when search-engine pages + Crawl4AI + API/text search do not yield a usable image
+- record the default enrichment passes and the crawled page/image candidates in each result when DuckDuckGo or Crawl4AI is used
 - continue into inventory import automatically after enrichment unless `--no-auto-import` is set, and write `inventory_import_results.json`
 - default auto-import policy should be `--import-min-confidence medium`
 - import only rows that have `imageUrl`, `category`, and a clean normalized name
-- if an item still has no image after all 3 enrichment passes, do not upload it and keep the 3 recorded attempts for audit
+- if an item still has no image after all passes, do not upload it and keep the recorded attempts for audit
 - keep weighted produce, malformed barcodes, and obviously noisy rows out of automatic import unless explicitly overridden
 - prefer running long jobs in background and notify the user from stage changes/checkpoints rather than waiting for them to ask
 - for detached execution, use `scripts/launch_catalog_flow_background.py` so the caller gets `jobId`, `statusOutput`, `logOutput`, and `outDir` immediately

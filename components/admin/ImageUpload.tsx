@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import Image from 'next/image';
 
 interface ImageUploadProps {
   value?: string;
@@ -55,13 +54,10 @@ export function ImageUpload({ value, onChange, onRemove, className = '', priorit
     return (
       <div className={`relative group ${className}`}>
         <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted">
-          <Image
+          <img
             src={value}
             alt="Product image"
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            priority={priority}
+            className="absolute inset-0 w-full h-full object-cover"
           />
           <button
             type="button"

@@ -1,6 +1,5 @@
 import { getDetailedProductById } from '@/app/api/products/helpers';
 import { notFound, redirect } from 'next/navigation';
-import Image from 'next/image';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -64,11 +63,9 @@ export default async function DeleteProductPage({
         <div className="flex items-start gap-4">
           {product.imageUrl && (
             <div className="shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-muted">
-              <Image
+              <img
                 src={product.imageUrl}
                 alt={product.name}
-                width={96}
-                height={96}
                 className="w-full h-full object-cover"
               />
             </div>

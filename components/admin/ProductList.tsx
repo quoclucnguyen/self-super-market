@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import type { ProductCode } from '@/drizzle/schema';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -83,12 +82,10 @@ export function ProductList({
                   <div className="flex items-center">
                     {product.imageUrl && (
                       <div className="shrink-0 h-10 w-10">
-                        <Image
+                        <img
                           className="h-10 w-10 rounded object-cover"
                           src={product.imageUrl}
                           alt={product.name}
-                          width={40}
-                          height={40}
                         />
                       </div>
                     )}
@@ -185,12 +182,10 @@ export function ProductList({
           <div key={product.id} className="bg-white dark:bg-gray-900 rounded-lg shadow p-4">
             <div className="flex items-start gap-3">
               {product.imageUrl && (
-                <Image
+                <img
                   className="h-16 w-16 rounded object-cover"
                   src={product.imageUrl}
                   alt={product.name}
-                  width={64}
-                  height={64}
                 />
               )}
               <div className="flex-1 min-w-0">

@@ -2,6 +2,7 @@
 import argparse
 import json
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -13,12 +14,13 @@ def load_json(path: Path):
 
 
 def send_message(cmd):
-    subprocess.run(
+    proc = subprocess.run(
         cmd,
         check=False,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
     )
+    return proc.returncode == 0, (proc.stdout or '').strip(), (proc.stderr or '').strip()
 
 
 def make_send_command(channel: str, target: str, text: str, reply_to: str | None = None):
@@ -44,6 +46,25 @@ def progress_key(status: dict):
     return (stage, state, processed, total, last_event)
 
 
+def latest_event(status: dict):
+    events = status.get('events') or []
+    return events[-1] if events else {}
+
+
+def format_summary(summary: dict):
+    preferred = ['totalResults', 'eligible', 'created', 'updated', 'skipped', 'failed']
+    ordered = []
+    seen = set()
+    for key in preferred:
+        if key in summary:
+            ordered.append(f'{key}={summary[key]}')
+            seen.add(key)
+    for key, value in summary.items():
+        if key not in seen:
+            ordered.append(f'{key}={value}')
+    return ', '.join(ordered)
+
+
 def format_update(job_id: str, status: dict):
     stage = status.get('stage', 'unknown')
     state = status.get('state', 'unknown')
@@ -51,16 +72,22 @@ def format_update(job_id: str, status: dict):
     summary = status.get('summary') or {}
     processed = progress.get('processed')
     total = progress.get('total')
+    event = latest_event(status)
+    event_message = event.get('message')
     extra = ''
     if processed is not None and total is not None and total:
         extra = f' ({processed}/{total})'
     if state == 'completed':
-        parts = [f'Job `{job_id}` xong.']
+        parts = [f'Job `{job_id}` xong ở stage `{stage}`{extra}.']
         if summary:
-            parts.append('Summary: ' + ', '.join(f'{k}={v}' for k, v in summary.items()))
+            parts.append('Tóm tắt: ' + format_summary(summary) + '.')
         return ' '.join(parts)
     if state == 'failed':
+        if event_message:
+            return f'Job `{job_id}` lỗi ở stage `{stage}`{extra}. {event_message}.'
         return f'Job `{job_id}` lỗi ở stage `{stage}`{extra}.'
+    if event_message and event.get('kind') in {'checkpoint', 'done'}:
+        return f'Job `{job_id}` cập nhật: {event_message}.'
     return f'Job `{job_id}` đang ở stage `{stage}` / state `{state}`{extra}.'
 
 
@@ -79,19 +106,22 @@ def main():
     last_key = None
     idle_started = time.time()
     sent_start = False
+    had_status_file = False
 
     while True:
         status = load_json(status_path)
         if status is None:
             time.sleep(args.poll_interval)
             if time.time() - idle_started > args.max_idle_seconds:
+                print('watcher_timeout_waiting_for_status', file=sys.stderr)
                 break
             continue
 
+        had_status_file = True
         job_id = args.job_id or status.get('jobId') or status_path.parent.name
         key = progress_key(status)
         if not sent_start:
-            send_message(
+            ok, stdout, stderr = send_message(
                 make_send_command(
                     args.channel,
                     args.target,
@@ -99,9 +129,12 @@ def main():
                     args.reply_to,
                 )
             )
-            sent_start = True
+            if ok:
+                sent_start = True
+            else:
+                print(f'notify_start_failed stdout={stdout} stderr={stderr}', file=sys.stderr)
         if key != last_key:
-            send_message(
+            ok, stdout, stderr = send_message(
                 make_send_command(
                     args.channel,
                     args.target,
@@ -109,14 +142,17 @@ def main():
                     args.reply_to,
                 )
             )
-            last_key = key
-            idle_started = time.time()
+            if ok:
+                last_key = key
+                idle_started = time.time()
+            else:
+                print(f'notify_update_failed stdout={stdout} stderr={stderr}', file=sys.stderr)
 
         if status.get('state') in {'completed', 'failed'}:
             break
 
         if time.time() - idle_started > args.max_idle_seconds:
-            send_message(
+            ok, stdout, stderr = send_message(
                 make_send_command(
                     args.channel,
                     args.target,
@@ -124,8 +160,13 @@ def main():
                     args.reply_to,
                 )
             )
+            if not ok:
+                print(f'notify_idle_failed stdout={stdout} stderr={stderr}', file=sys.stderr)
             break
         time.sleep(args.poll_interval)
+
+    if not had_status_file:
+        sys.exit(1)
 
 
 if __name__ == '__main__':

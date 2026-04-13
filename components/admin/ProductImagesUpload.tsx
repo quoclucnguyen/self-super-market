@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import Image from 'next/image';
 import { Loader2, Star, Trash2, Upload } from 'lucide-react';
 
 import type { ProductImageInput } from '@/lib/validations/product';
@@ -121,12 +120,10 @@ export function ProductImagesUpload({
           {normalizedImages.map((image, index) => (
             <div key={image.imagePublicId} className="relative rounded-lg border border-border overflow-hidden">
               <div className="relative h-28 bg-muted">
-                <Image
+                <img
                   src={image.imageUrl}
                   alt={`Product image ${index + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 50vw, 33vw"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
               </div>
               <div className="p-2 flex items-center justify-between gap-2 bg-card">

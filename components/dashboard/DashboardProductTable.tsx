@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import type { ProductCode } from '@/drizzle/schema';
 
 interface DashboardProduct {
@@ -68,12 +67,10 @@ export function DashboardProductTable({ products, maxDisplay = 5 }: DashboardPro
                   >
                     {product.imageUrl && (
                       <div className="wf-panel w-8 h-8 shrink-0 overflow-hidden">
-                        <Image
+                        <img
                           className="w-full h-full object-cover"
                           src={product.imageUrl}
                           alt={product.name}
-                          width={32}
-                          height={32}
                         />
                       </div>
                     )}
